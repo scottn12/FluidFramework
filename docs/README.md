@@ -209,7 +209,7 @@ The site theme/template lives in `themes/thxvscode`.
 | `build:diagrams` | Generate the diagram images using ditaa. |
 | `build:fast` | Builds the site in a fast, but incomplete way. Useful for testing and interation. |
 | `build:md-magic` | Updates generated content in Markdown files. |
-| `build:prep` | Prepare input files for the build. |
+| `build:prep` | Copy files from _api-extractor-temp/doc-models in the root of the repo to a staging location for the docs build. |
 | `build:uber-package` | `node ../rollup-api-json.js ../_api-extractor-temp/doc-models` |
 | `clean` | Remove all generated files. |
 | `copyfiles` | `copyfiles _replacements/ content/` |

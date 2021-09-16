@@ -3,90 +3,91 @@
  * Licensed under the MIT License.
  */
 
+/**
+ * Our public API is exposed by re-exporting things from 'internal' packages in 'external' packages, like
+ * fluid-framework. API Extractor does not extract re-exported APIs, so this script manipulates the API Extractor JSON
+ * output to merge and re-write the API JSON as a workaround.
+ *
+ * This script changes source files in place; you may want to create a copy of the source files prior to running this
+ * script on them. If you're using the tasks defined in package.json, then you don't need to do this; those scripts
+ * create copies.
+ */
+
 const fs = require("fs");
-// const findValue = require("deepdash/findValueDeep");
-// const mapValue = require("deepdash/mapValuesDeep");
 
 const apiPath = process.argv[2];
 
-/** Given a package name, returns its name and path as a tuple. */
-const parsePackage = (pkg) => {
-    const name = pkg.includes("/") ? pkg.split("/")[1] : pkg;
+/**
+ * Given a package name, returns its name and path as a tuple.
+ * @param {string} package
+ */
+const parsePackage = (package) => {
+    const name = package.includes("/") ? package.split("/")[1] : package;
     const path = `${apiPath}/${name}.api.json`;
     return [name, path];
 };
 
-const rewirePackage = (input, srcPkg, targetPackage) => input.replace(srcPkg, targetPackage);
+/**
+ * @param {string} input
+ * @param {string} sourcePackage
+ * @param {string} targetPackage
+ * @returns {string} The updated string.
+ */
+const rewirePackage = (input, sourcePackage, targetPackage) => input.replace(sourcePackage, targetPackage);
 
-const rewriteImports = async (rewriteMap) => {
-    for (const { package, sourcePackage } of rewriteMap) {
-        const [_, path] = parsePackage(package);
+/**
+ * @param {string} package the name of a package containing re-exported APIs.
+ * @param {string} sourcePackage the name of the package that is the source of the re-exported APIs.
+ */
+const rewriteImports = async (package, sourcePackage) => {
+    const [_, path] = parsePackage(package);
 
-        try {
-            console.log(`Loading ${path}`);
-            const jsonStr = fs.readFileSync(path, "utf8");
-            const updated = rewirePackage(jsonStr, sourcePackage, package);
-            fs.writeFileSync(path, updated);
-        } catch (ex) {
-            console.log(ex);
-        }
-    }
-};
-
-const rollupPackage = async (packageMap) => {
-    for (const { package, sourcePackages } of packageMap) {
-        const rollup = [];
-        for (const sourcePackage of sourcePackages) {
-            const [_, sourcePath] = parsePackage(sourcePackage);
-            try {
-                const apiJson = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
-                rollup.push(...apiJson.members[0].members);
-            } catch (ex) {
-                console.log(ex);
-            }
-        }
-
-        const [pkgName, pkgPath] = parsePackage(package);
-        try {
-            const json = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-            json.members[0].members = rollup;
-            const jsonStr = JSON.stringify(json);
-            const results = rewirePackage(jsonStr, package, pkgPath);
-            fs.writeFileSync(pkgPath, results);
-        } catch (ex) {
-            console.log(ex);
-        }
+    try {
+        console.log(`Loading ${path}`);
+        const jsonStr = fs.readFileSync(path, "utf8");
+        const updated = rewirePackage(jsonStr, sourcePackage, package);
+        fs.writeFileSync(path, updated);
+    } catch (ex) {
+        console.log(ex);
     }
 };
 
 /**
- * This is a list of packages that import and re-export some APIs from other packages. The canonical references will be
- * rewritten based on the information here.
+ * @param {string} package the name of a package that rolls up exported APIs from abother package.
+ * @param {string} sourcePackages an array of package names whose contents should be rolled up into `package`.
  */
-const importRewrites = [
-    {
-        // Package with the imports that will be rewritten
-        package: "@fluidframework/fluid-static",
+const rollupPackage = async (package, sourcePackages) => {
+    const rollup = [];
+    for (const sourcePackage of sourcePackages) {
+        const [_, sourcePath] = parsePackage(sourcePackage);
+        try {
+            const apiJson = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
+            rollup.push(...apiJson.members[0].members);
+        } catch (ex) {
+            console.log(ex);
+        }
+    }
 
-        // Package that is the source of the imports
-        sourcePackage: "@fluidframework/container-definitions",
+    const [_, packagePath] = parsePackage(package);
+    try {
+        const json = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+        json.members[0].members = rollup;
+        const jsonStr = JSON.stringify(json);
 
-        // // List of import names
-        // imports: ["AttachState"],
-    },
-];
-
-const packages = [
-    {
-        package: "fluid-framework",
-        sourcePackages: ["@fluidframework/fluid-static"],
-    },
-];
+        // rewire every re-exported package
+        const results = rewirePackage(jsonStr, package, packagePath);
+        fs.writeFileSync(packagePath, results);
+    } catch (ex) {
+        console.log(ex);
+    }
+};
 
 const start = async () => {
-    // Rewrite the files with updated imports
-    rewriteImports(importRewrites);
-    rollupPackage(packages);
-}
+    // Rewrite fluid-static imports from container-definitions
+    rewriteImports("@fluidframework/fluid-static", "@fluidframework/container-definitions");
+
+    // fluid-framework re-exports all of fluid-static
+    rollupPackage("fluid-framework", ["@fluidframework/fluid-static"]);
+};
 
 start();
