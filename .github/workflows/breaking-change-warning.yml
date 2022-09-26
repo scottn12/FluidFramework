@@ -6,13 +6,15 @@ on:
       - main
       - release/*
       - next
+    paths:
+      - "**package.json"
 
 jobs:
   check_broken_types:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # pin@v3
         with:
           fetch-depth: 0
 
@@ -20,7 +22,6 @@ jobs:
         id: check
         run: |
           declare -a arr=($(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | xargs))
-          echo "${arr[@]}"
           for i in "${arr[@]}"; do
             if [[ ! "$i" =~ package.json$ ]]; then
               continue
