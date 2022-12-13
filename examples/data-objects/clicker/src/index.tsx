@@ -62,7 +62,7 @@ export class Clicker extends DataObject<{ Events: IClickerEvents; }> {
     }
 
     private setupAgent() {
-        this.taskManager.lockTask(consoleLogTaskId)
+        this.taskManager.volunteerForTask(consoleLogTaskId)
             .then(async () => {
                 console.log(`Picked`);
                 const clickerAgent = new ClickerAgent(this.counter);

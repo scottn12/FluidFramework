@@ -3,6 +3,6 @@
  * Licensed under the MIT License.
  */
 
-export * from "./interfaces";
+export { ITaskManager, ITaskManagerEvents } from "./interfaces";
 export * from "./oldestClientObserver";
-export * from "./taskManager";
+export { TaskManager } from "./taskManager";

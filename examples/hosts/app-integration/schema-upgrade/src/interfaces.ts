@@ -16,7 +16,7 @@ export interface IContainerKillBit extends IEventProvider<IContainerKillBitEvent
     setDead(): Promise<void>;
     markedForDestruction: boolean;
     markForDestruction(): Promise<void>;
-    volunteerForDestruction(): Promise<void>;
+    volunteerForDestruction(): Promise<boolean>;
     haveDestructionTask(): boolean;
 }
 

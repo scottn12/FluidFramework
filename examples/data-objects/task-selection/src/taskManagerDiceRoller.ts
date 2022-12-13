@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { TaskManager } from "@fluid-experimental/task-manager";
+import { TaskManager } from "@fluidframework/task-manager";
 import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct";
 import { assert } from "@fluidframework/common-utils";
 import { IFluidHandle } from "@fluidframework/core-interfaces";
@@ -71,7 +71,7 @@ export class TaskManagerDiceRoller extends DataObject implements IDiceRoller {
     public volunteerForAutoRoll() {
         // Try to take the task and wait until we get it.  This may wait forever if the current task holder
         // doesn't release it.
-        this.taskManager.lockTask(autoRollTaskId)
+        this.taskManager.volunteerForTask(autoRollTaskId)
             .then(async () => {
                 // Attempt to reacquire the task if we lose it
                 this.taskManager.once("lost", () => {
@@ -109,7 +109,7 @@ export class TaskManagerDiceRoller extends DataObject implements IDiceRoller {
     }
 
     public hasTask() {
-        return this.taskManager.haveTaskLock(autoRollTaskId);
+        return this.taskManager.assigned(autoRollTaskId);
     }
 }
 

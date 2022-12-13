@@ -92,16 +92,16 @@ export class ContainerKillBit extends DataObject implements IContainerKillBit {
         );
     }
 
-    public async volunteerForDestruction(): Promise<void> {
+    public async volunteerForDestruction(): Promise<boolean> {
         return PerformanceEvent.timedExecAsync(
             this.runtime.logger,
             { eventName: "VolunteeringForDestruction" },
-            async () => this.taskManager.lockTask(destroyTaskName),
+            async () => this.taskManager.volunteerForTask(destroyTaskName),
         );
     }
 
     public haveDestructionTask(): boolean {
-        return this.taskManager.haveTaskLock(destroyTaskName);
+        return this.taskManager.assigned(destroyTaskName);
     }
 
     protected async initializingFirstTime() {

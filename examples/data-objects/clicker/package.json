@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@fluid-example/example-utils": "^1.3.2",
-    "@fluid-experimental/task-manager": "^1.3.2",
+    "@fluidframework/task-manager": "^1.3.2",
     "@fluidframework/aqueduct": "^1.3.2",
     "@fluidframework/common-definitions": "^0.20.1",
     "@fluidframework/core-interfaces": "^1.3.2",
