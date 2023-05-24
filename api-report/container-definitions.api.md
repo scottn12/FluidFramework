@@ -236,6 +236,8 @@ export interface IContainerLoadMode {
     // (undocumented)
     deltaConnection?: "none" | "delayed" | undefined;
     // (undocumented)
+    frozenAtSeqNum?: number | undefined;
+    // (undocumented)
     opsBeforeReturn?: undefined | "cached" | "all";
 }
 

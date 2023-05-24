@@ -31,8 +31,19 @@ const diceRollerId = "dice-roller";
  */
 export class DiceRollerContainerRuntimeFactory extends ModelContainerRuntimeFactory<IDiceRollerAppModel> {
 	constructor() {
+		const runtimeOptions = {
+			summaryOptions: {
+				summaryConfigOverrides: {
+					// We completely disable summaries for the purpose of this POC.
+					// In the future we will want to disable summaries once we agree to migrate, and then re-enable
+					// once we complete the export.
+					state: "disabled",
+				},
+			},
+		};
 		super(
 			new Map([DiceRollerInstantiationFactory.registryEntry]), // registryEntries
+			runtimeOptions,
 		);
 	}
 

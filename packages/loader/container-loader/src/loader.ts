@@ -445,6 +445,13 @@ export class Loader implements IHostLoader {
 			await new Promise<void>((resolve, reject) => {
 				function opHandler(message: ISequencedDocumentMessage) {
 					if (message.sequenceNumber > fromSequenceNumber) {
+						if (
+							request.headers?.[LoaderHeader.loadMode]?.frozenAtSeqNum !== undefined
+						) {
+							// Pause inbound queue processing when we reach the frozen sequence number
+							// TODO: Op processing is async, is it possible we get extra ops?
+							void container.deltaManager.inbound.pause();
+						}
 						resolve();
 						container.removeListener("op", opHandler);
 					}
@@ -471,8 +478,14 @@ export class Loader implements IHostLoader {
 		request.headers = request.headers ?? {};
 
 		const headerSeqNum = request.headers[LoaderHeader.sequenceNumber];
+		const frozenSeqNum = request.headers[LoaderHeader.loadMode].frozenAtSeqNum as
+			| number
+			| undefined;
 		if (headerSeqNum !== undefined) {
 			fromSequenceNumber = headerSeqNum;
+		} else if (frozenSeqNum !== undefined) {
+			// TODO: Should we need to do this?
+			fromSequenceNumber = frozenSeqNum - 1;
 		}
 
 		// If set in both query string and headers, use query string

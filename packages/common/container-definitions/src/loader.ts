@@ -616,6 +616,8 @@ export interface IContainerLoadMode {
 		 * Default value.
 		 */
 		| undefined;
+
+	frozenAtSeqNum?: number | undefined;
 }
 
 /**

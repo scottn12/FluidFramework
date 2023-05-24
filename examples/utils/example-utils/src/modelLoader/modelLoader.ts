@@ -128,4 +128,18 @@ export class ModelLoader<ModelType> implements IModelLoader<ModelType> {
 		const model = await this.getModelFromContainer(container);
 		return model;
 	}
+
+	public async loadExistingFrozen(id: string, seqNumber: number): Promise<ModelType> {
+		const container = await this.loader.resolve({
+			url: id,
+			headers: {
+				"fluid-cache": false,
+				"loadMode": {
+					frozenAtSeqNum: seqNumber,
+				},
+			},
+		});
+		const model = await this.getModelFromContainer(container);
+		return model;
+	}
 }
