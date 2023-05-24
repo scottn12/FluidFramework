@@ -16,6 +16,11 @@ export interface IDiceRoller extends EventEmitter {
 	readonly value: number;
 
 	/**
+	 * Get's the last sequence number for this DiceRoller.
+	 */
+	readonly lastSequenceNumber: number;
+
+	/**
 	 * Roll the dice.  Will cause a "diceRolled" event to be emitted.
 	 */
 	roll: () => void;
@@ -45,9 +50,13 @@ const lastSeqNumKey = "lastSequenceNumber";
  */
 export class DiceRoller extends DataObject implements IDiceRoller {
 	/**
-	 * Used to track lastSequenceNumber we agree to load the frozen container up to.
+	 * Used to track lastSequenceNumber we agree to load the export container up to.
 	 */
-	private lastSequenceNumber: number | undefined;
+	private exportSequenceNumber: number | undefined;
+
+	public get lastSequenceNumber() {
+		return this.runtime.deltaManager.lastSequenceNumber;
+	}
 
 	/**
 	 * initializingFirstTime is run only once by the first client to create the DataObject.  Here we use it to
@@ -62,7 +71,7 @@ export class DiceRoller extends DataObject implements IDiceRoller {
 	 * DataObject, by registering an event listener for dice rolls.
 	 */
 	protected async hasInitialized() {
-		this.lastSequenceNumber = this.root.get(lastSeqNumKey);
+		this.exportSequenceNumber = this.root.get(lastSeqNumKey);
 
 		this.root.on("valueChanged", (changed) => {
 			if (changed.key === diceValueKey) {
@@ -70,9 +79,9 @@ export class DiceRoller extends DataObject implements IDiceRoller {
 				this.emit("diceRolled");
 			}
 			if (changed.key === lastSeqNumKey) {
-				this.lastSequenceNumber = this.root.get(lastSeqNumKey);
-				console.log("Agreed to migrate at seq #:", this.lastSequenceNumber);
-				this.emit("export", this.lastSequenceNumber);
+				this.exportSequenceNumber = this.root.get(lastSeqNumKey);
+				console.log("Agreed to migrate at seq #:", this.exportSequenceNumber);
+				this.emit("export", this.exportSequenceNumber);
 			}
 		});
 	}
@@ -89,12 +98,11 @@ export class DiceRoller extends DataObject implements IDiceRoller {
 
 	public readonly export = () => {
 		// Only set if not already set
-		if (this.lastSequenceNumber === undefined) {
-			const lastSequenceNumber = this.runtime.deltaManager.lastSequenceNumber;
-			this.root.set(lastSeqNumKey, lastSequenceNumber);
+		if (this.exportSequenceNumber === undefined) {
+			this.root.set(lastSeqNumKey, this.lastSequenceNumber);
 		} else {
-			console.log("Migration already agreed to at seq #:", this.lastSequenceNumber);
-			this.emit("export", this.lastSequenceNumber);
+			console.log("Migration already agreed to at seq #:", this.exportSequenceNumber);
+			this.emit("export", this.exportSequenceNumber);
 		}
 	};
 }

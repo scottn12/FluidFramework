@@ -40,40 +40,26 @@ async function start() {
 	const contentDiv = document.getElementById("content") as HTMLDivElement;
 	renderDiceRoller(model.diceRoller, contentDiv);
 
-	let frozenModel;
-
-	// // Determine agreed upon last sequence number at migration
-	// const lastSequenceNumber: number = (model.diceRoller as any).runtime.deltaManager
-	// 	.lastSequenceNumber;
-	// console.log("Agreed migration last seq #:", lastSequenceNumber);
-
-	// // Simulate time passing
-	// await new Promise<void>((resolve) => {
-	// 	setTimeout(() => {
-	// 		resolve();
-	// 	}, 3000);
-	// });
+	let exportModel: IDiceRollerAppModel | undefined;
 
 	// eslint-disable-next-line @typescript-eslint/no-misused-promises
 	model.diceRoller.once("export", async (lastSequenceNumber: number) => {
 		// console.log("Loading frozen container at seq #:", lastSequenceNumber);
 		// Load frozen container at lastSequenceNumber
-		frozenModel = await tinyliciousModelLoader.loadExistingFrozen(id, lastSequenceNumber);
-		console.log(
-			"Frozen container loaded at seq #:",
-			frozenModel.diceRoller.runtime.deltaManager.lastSequenceNumber,
-		);
-		// TODO: try to read data from frozen dice roller
+		exportModel = await tinyliciousModelLoader.loadExistingFrozen(id, lastSequenceNumber);
+		console.log("Frozen container loaded at seq #:", exportModel.diceRoller.lastSequenceNumber);
+		// Try reading data from exported model
+		console.log("Reading exported model's dice value:", exportModel.diceRoller.value);
 	});
 
 	// Log each container's last sequence number as time passes
 	setInterval(() => {
 		console.log(
 			"active container last seq #:",
-			(model.diceRoller as any).runtime.deltaManager.lastSequenceNumber,
+			model.diceRoller.lastSequenceNumber,
 			"|",
 			"frozen container last seq #:",
-			frozenModel?.diceRoller.runtime.deltaManager.lastSequenceNumber,
+			exportModel?.diceRoller.lastSequenceNumber,
 		);
 	}, 5000);
 }
