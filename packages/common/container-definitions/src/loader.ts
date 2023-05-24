@@ -617,7 +617,15 @@ export interface IContainerLoadMode {
 		 */
 		| undefined;
 
-	frozenAtSeqNum?: number | undefined;
+	frozenAtSeqNum?: /*
+	 * Container loads normally. Default value
+	 */
+	| undefined
+		/*
+		 * Container is loaded at the specified sequence number and will not receive any additional ops.
+		 * TODO: Avoid collision with other load modes
+		 */
+		| number;
 }
 
 /**
