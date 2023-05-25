@@ -44,6 +44,7 @@ import { Container, IPendingContainerState } from "./container";
 import { IParsedUrl, parseUrl } from "./utils";
 import { pkgVersion } from "./packageVersion";
 import { ProtocolHandlerBuilder } from "./protocol";
+import { assert } from "@fluidframework/common-utils";
 
 function canUseCache(request: IRequest): boolean {
 	if (request.headers === undefined) {
@@ -439,6 +440,14 @@ export class Loader implements IHostLoader {
 			}
 		} else {
 			container = await this.loadContainer(request, resolvedAsFluid, pendingLocalState);
+		}
+
+		if (request.headers?.[LoaderHeader.loadMode]?.frozenAtSeqNum !== undefined) {
+			assert(
+				container.deltaManager.lastSequenceNumber <=
+					request.headers[LoaderHeader.loadMode].frozenAtSeqNum,
+				"Frozen sequence number is before than the most recent snapshot",
+			);
 		}
 
 		if (container.deltaManager.lastSequenceNumber <= fromSequenceNumber) {
