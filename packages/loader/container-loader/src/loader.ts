@@ -40,11 +40,11 @@ import {
 } from "@fluidframework/driver-definitions";
 import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
 import { ensureFluidResolvedUrl } from "@fluidframework/driver-utils";
+import { assert } from "@fluidframework/common-utils";
 import { Container, IPendingContainerState } from "./container";
 import { IParsedUrl, parseUrl } from "./utils";
 import { pkgVersion } from "./packageVersion";
 import { ProtocolHandlerBuilder } from "./protocol";
-import { assert } from "@fluidframework/common-utils";
 
 function canUseCache(request: IRequest): boolean {
 	if (request.headers === undefined) {
@@ -443,6 +443,9 @@ export class Loader implements IHostLoader {
 		}
 
 		if (request.headers?.[LoaderHeader.loadMode]?.frozenAtSeqNum !== undefined) {
+			// If we are loading a frozen container, it should be in read-only mode.
+			// We should also check that the most recent snapshot isn't more recent than the frozen sequence number.
+			container.forceReadonly(true);
 			assert(
 				container.deltaManager.lastSequenceNumber <=
 					request.headers[LoaderHeader.loadMode].frozenAtSeqNum,
