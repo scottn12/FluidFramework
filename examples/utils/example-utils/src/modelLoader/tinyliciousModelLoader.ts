@@ -46,7 +46,7 @@ export class TinyliciousModelLoader<ModelType> implements IModelLoader<ModelType
 	public async loadExisting(id: string) {
 		return this.modelLoader.loadExisting(id);
 	}
-	public async loadExistingFrozen(id: string, seqNumber: number) {
-		return this.modelLoader.loadExistingFrozen(id, seqNumber);
+	public async loadExistingFrozen(id: string, freezeAtSeqNum: number) {
+		return this.modelLoader.loadExistingFrozen(id, { freezeAtSeqNum });
 	}
 }

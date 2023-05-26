@@ -25,6 +25,10 @@ interface IModelRequest extends IRequest {
 	};
 }
 
+export interface ILoadOptions {
+	readonly freezeAtSeqNum: number;
+}
+
 const isModelRequest = (request: IRequest): request is IModelRequest =>
 	request.url === modelUrl && request.headers?.containerRef !== undefined;
 
@@ -129,13 +133,13 @@ export class ModelLoader<ModelType> implements IModelLoader<ModelType> {
 		return model;
 	}
 
-	public async loadExistingFrozen(id: string, seqNumber: number): Promise<ModelType> {
+	public async loadExistingFrozen(id: string, loadOptions: ILoadOptions): Promise<ModelType> {
 		const container = await this.loader.resolve({
 			url: id,
 			headers: {
 				"fluid-cache": false,
 				"loadMode": {
-					frozenAtSeqNum: seqNumber,
+					freezeAtSeqNum: loadOptions.freezeAtSeqNum,
 				},
 			},
 		});

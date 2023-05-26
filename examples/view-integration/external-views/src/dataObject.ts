@@ -55,6 +55,8 @@ export class DiceRoller extends DataObject implements IDiceRoller {
 	private exportSequenceNumber: number | undefined;
 
 	public get lastSequenceNumber() {
+		// In a production scenario this infromation will normally live on the MigrationTool. However, for this POC
+		// we access it here for convenience.
 		return this.runtime.deltaManager.lastSequenceNumber;
 	}
 
@@ -96,6 +98,9 @@ export class DiceRoller extends DataObject implements IDiceRoller {
 		this.root.set(diceValueKey, rollValue);
 	};
 
+	// Note: In a production scenario this would likely be triggered by a PactMap agreement on the MigrationTool
+	// when migration has the least risk of user disruption. For the convenience of this POC, we manually trigger the
+	// export flow by clicking a button.
 	public readonly export = () => {
 		// Only set if not already set
 		if (this.exportSequenceNumber === undefined) {

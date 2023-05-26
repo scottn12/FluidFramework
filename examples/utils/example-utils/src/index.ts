@@ -21,6 +21,7 @@ export { Migrator } from "./migrator";
 export {
 	IDetachedModel,
 	IModelLoader,
+	ILoadOptions,
 	makeModelRequestHandler,
 	ModelContainerRuntimeFactory,
 	ModelLoader,

@@ -1413,7 +1413,7 @@ export class Container
 		if (
 			loadMode.deltaConnection === undefined &&
 			!pendingLocalState &&
-			loadMode.frozenAtSeqNum === undefined
+			loadMode.freezeAtSeqNum === undefined
 		) {
 			this.connectToDeltaStream(connectionArgs);
 		}

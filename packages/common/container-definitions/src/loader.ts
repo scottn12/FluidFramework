@@ -617,7 +617,7 @@ export interface IContainerLoadMode {
 		 */
 		| undefined;
 
-	frozenAtSeqNum?: /*
+	freezeAtSeqNum?: /*
 	 * Container loads normally. Default value
 	 */
 	| undefined
