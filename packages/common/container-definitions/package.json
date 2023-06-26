@@ -61,6 +61,13 @@
 		"typescript": "~4.5.5"
 	},
 	"typeValidation": {
-		"broken": {}
+		"broken": {
+			"InterfaceDeclaration_IContainerLoadMode": {
+				"backCompat": false
+			},
+			"InterfaceDeclaration_ILoaderHeader": {
+				"backCompat": false
+			}
+		}
 	}
 }

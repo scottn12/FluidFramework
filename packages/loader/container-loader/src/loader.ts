@@ -40,8 +40,6 @@ import {
 	IUrlResolver,
 } from "@fluidframework/driver-definitions";
 import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { ensureFluidResolvedUrl } from "@fluidframework/driver-utils";
-import { assert } from "@fluidframework/common-utils";
 import { Container, IPendingContainerState } from "./container";
 import { IParsedUrl, parseUrl } from "./utils";
 import { pkgVersion } from "./packageVersion";
@@ -433,7 +431,7 @@ export class Loader implements IHostLoader {
 			}
 		}
 
-		const { canCache, fromSequenceNumber, freezeAtSeqNum } = this.parseHeader(parsed, request);
+		const { canCache, fromSequenceNumber, shouldFreeze } = this.parseHeader(parsed, request);
 		const shouldCache = pendingLocalState !== undefined ? false : canCache;
 
 		let container: Container;
@@ -451,22 +449,30 @@ export class Loader implements IHostLoader {
 			container = await this.loadContainer(request, resolvedAsFluid, pendingLocalState);
 		}
 
-		if (freezeAtSeqNum !== undefined) {
-			// We should check that the most recent snapshot isn't more recent than the frozen sequence number.
-			if (container.deltaManager.lastSequenceNumber > freezeAtSeqNum) {
-				throw new Error("Most recent snapshot is newer than frozen sequence number");
+		if (shouldFreeze) {
+			// Only throw the error if a sequenceNumber was actually set (negative sequenceNumber is the default)
+			if (
+				fromSequenceNumber >= 0 &&
+				container.deltaManager.lastSequenceNumber > fromSequenceNumber
+			) {
+				throw new Error(
+					`Most recent snapshot (${container.deltaManager.lastSequenceNumber}) is newer than frozen sequence number (${fromSequenceNumber})`,
+				);
 			}
-			// If we are loading a frozen container, it should be in read-only mode.
+			// Force readonly mode - this will ensure we don't receive an error for the lack of join op
 			container.forceReadonly(true);
+		}
 
-			// Handle incoming ops up until the frozen sequence number, then pause inbound ops.
+		// If we have not yet reached `fromSequenceNumber`, we will wait for ops to arrive until we reach it
+		if (container.deltaManager.lastSequenceNumber < fromSequenceNumber) {
 			await new Promise<void>((resolve, reject) => {
 				function opHandler(message: ISequencedDocumentMessage) {
-					assert(freezeAtSeqNum !== undefined, "freezeAtSeqNum should be defined");
-					if (message.sequenceNumber >= freezeAtSeqNum) {
-						// Pause inbound queue processing when we reach the frozen sequence number
-						// TODO: Op processing is async, is it possible we get extra ops?
-						void container.deltaManager.inbound.pause();
+					if (message.sequenceNumber >= fromSequenceNumber) {
+						if (shouldFreeze) {
+							// Disconnect the container ASAP when reach the desired sequence number.
+							// TODO: Op processing is async, is it possible we get extra ops?
+							container.disconnect();
+						}
 						resolve();
 						container.removeListener("op", opHandler);
 					}
@@ -474,17 +480,10 @@ export class Loader implements IHostLoader {
 
 				container.on("op", opHandler);
 			});
-		} else if (container.deltaManager.lastSequenceNumber <= fromSequenceNumber) {
-			await new Promise<void>((resolve, reject) => {
-				function opHandler(message: ISequencedDocumentMessage) {
-					if (message.sequenceNumber > fromSequenceNumber) {
-						resolve();
-						container.removeListener("op", opHandler);
-					}
-				}
-
-				container.on("op", opHandler);
-			});
+		} else if (shouldFreeze) {
+			// Disconnect the container ASAP when reach the desired sequence number.
+			// TODO: Op processing is async, is it possible we get extra ops?
+			container.disconnect();
 		}
 
 		return { container, parsed };
@@ -504,12 +503,12 @@ export class Loader implements IHostLoader {
 		request.headers = request.headers ?? {};
 
 		const headerSeqNum = request.headers[LoaderHeader.sequenceNumber];
-		const freezeAtSeqNum = request.headers[LoaderHeader.loadMode].freezeAtSeqNum as
-			| number
-			| undefined;
 		if (headerSeqNum !== undefined) {
 			fromSequenceNumber = headerSeqNum;
 		}
+
+		const shouldFreeze: boolean =
+			request.headers[LoaderHeader.loadMode]?.freezeAfterLoad ?? false;
 
 		// If set in both query string and headers, use query string
 		request.headers[LoaderHeader.version] =
@@ -520,7 +519,7 @@ export class Loader implements IHostLoader {
 		return {
 			canCache,
 			fromSequenceNumber,
-			freezeAtSeqNum,
+			shouldFreeze,
 		};
 	}
 
@@ -535,6 +534,7 @@ export class Loader implements IHostLoader {
 				version: request.headers?.[LoaderHeader.version] ?? undefined,
 				loadMode: request.headers?.[LoaderHeader.loadMode],
 				pendingLocalState,
+				loadToSequenceNumber: request.headers?.[LoaderHeader.sequenceNumber],
 			},
 			{
 				canReconnect: request.headers?.[LoaderHeader.reconnect],

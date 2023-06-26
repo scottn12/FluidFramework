@@ -135,6 +135,8 @@ export interface IContainerLoadProps {
 	 * The pending state serialized from a pervious container instance
 	 */
 	readonly pendingLocalState?: IPendingContainerState;
+
+	readonly loadToSequenceNumber?: number;
 }
 
 /**
@@ -386,7 +388,13 @@ export class Container
 					container.on("closed", onClosed);
 
 					container
-						.load(version, mode, resolvedUrl, pendingLocalState)
+						.load(
+							version,
+							mode,
+							resolvedUrl,
+							pendingLocalState,
+							loadProps.loadToSequenceNumber,
+						)
 						.finally(() => {
 							container.removeListener("closed", onClosed);
 						})
@@ -1403,6 +1411,7 @@ export class Container
 		loadMode: IContainerLoadMode,
 		resolvedUrl: IResolvedUrl,
 		pendingLocalState?: IPendingContainerState,
+		loadToSequenceNumber?: number,
 	) {
 		this.service = await this.serviceFactory.createDocumentService(
 			resolvedUrl,
@@ -1427,11 +1436,7 @@ export class Container
 
 		// Start websocket connection as soon as possible. Note that there is no op handler attached yet, but the
 		// DeltaManager is resilient to this and will wait to start processing ops until after it is attached.
-		if (
-			loadMode.deltaConnection === undefined &&
-			!pendingLocalState &&
-			loadMode.freezeAtSeqNum === undefined
-		) {
+		if (loadMode.deltaConnection === undefined && !pendingLocalState) {
 			this.connectToDeltaStream(connectionArgs);
 		}
 
@@ -1477,6 +1482,14 @@ export class Container
 
 		let opsBeforeReturnP: Promise<void> | undefined;
 
+		const loadToSeqNumListener = (message: any) => {
+			if (message.sequenceNumber === loadToSequenceNumber) {
+				void this.deltaManager.inbound.pause();
+				this.disconnect();
+				this.off("op", loadToSeqNumListener);
+			}
+		};
+
 		// Attach op handlers to finish initialization and be able to start processing ops
 		// Kick off any ops fetching if required.
 		switch (loadMode.opsBeforeReturn) {
@@ -1487,6 +1500,10 @@ export class Container
 					dmAttributes,
 					loadMode.deltaConnection !== "none" ? "all" : "none",
 				);
+				break;
+			case "sequenceNumber":
+				this.on("op", loadToSeqNumListener);
+				opsBeforeReturnP = this.attachDeltaManagerOpHandler(dmAttributes, "sequenceNumber");
 				break;
 			case "cached":
 				opsBeforeReturnP = this.attachDeltaManagerOpHandler(dmAttributes, "cached");
@@ -1901,7 +1918,7 @@ export class Container
 
 	private async attachDeltaManagerOpHandler(
 		attributes: IDocumentAttributes,
-		prefetchType?: "cached" | "all" | "none",
+		prefetchType?: "sequenceNumber" | "cached" | "all" | "none",
 	) {
 		return this._deltaManager.attachOpHandler(
 			attributes.minimumSequenceNumber,
