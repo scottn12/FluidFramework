@@ -43,7 +43,7 @@ export interface IProtocolHandler {
     // (undocumented)
     readonly quorum: IQuorum;
     // (undocumented)
-    setConnectionState(connected: boolean, clientId: string | undefined): any;
+    setConnectionState(connected: boolean, clientId: string | undefined, testBreakingChange: boolean): any;
     // (undocumented)
     snapshot(): IQuorumSnapshot;
 }
@@ -89,7 +89,7 @@ export class ProtocolOpHandler implements IProtocolHandler {
     // (undocumented)
     sequenceNumber: number;
     // (undocumented)
-    setConnectionState(connected: boolean, clientId: string | undefined): void;
+    setConnectionState(connected: boolean, clientId: string | undefined, testBreakingChange: boolean): void;
     // (undocumented)
     snapshot(): IQuorumSnapshot;
 }

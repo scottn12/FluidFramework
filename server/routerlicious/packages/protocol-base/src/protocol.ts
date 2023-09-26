@@ -30,7 +30,11 @@ export interface IProtocolHandler {
 	readonly quorum: IQuorum;
 	readonly attributes: IDocumentAttributes;
 
-	setConnectionState(connected: boolean, clientId: string | undefined);
+	setConnectionState(
+		connected: boolean,
+		clientId: string | undefined,
+		testBreakingChange: boolean,
+	);
 	snapshot(): IQuorumSnapshot;
 
 	close(): void;
@@ -65,7 +69,14 @@ export class ProtocolOpHandler implements IProtocolHandler {
 		};
 	}
 
-	setConnectionState(connected: boolean, clientId: string | undefined) {
+	setConnectionState(
+		connected: boolean,
+		clientId: string | undefined,
+		testBreakingChange: boolean,
+	) {
+		if (testBreakingChange) {
+			console.log("testing breaking changes...");
+		}
 		this._quorum.setConnectionState(connected, clientId);
 	}
 
