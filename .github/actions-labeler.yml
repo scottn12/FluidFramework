@@ -59,7 +59,7 @@
 "area: runtime":
   - packages/runtime/**
 
-"area: test":
+"scott test":
   - server/**
 
 "area: tests":
