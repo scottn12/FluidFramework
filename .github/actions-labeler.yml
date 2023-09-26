@@ -82,10 +82,9 @@ dependencies:
 documentation:
   - docs/content/**
 
-changeset-required:
-  - server/routerlicious/**
-  - server/tinylicious/**
-
 # flag changes to public APIs so they can be reviewed to see if they're breaking
 "public api change":
   - "**/api-report/**"
+
+changeset-required:
+  - any: [server/routerlicious/**, "server/tinylicious/**"]
