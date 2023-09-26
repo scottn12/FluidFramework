@@ -1,8 +1,8 @@
 name: "Pull Request Labeler"
 on:
-  pull_request_target:
+  pull_request:
     types: [ opened, synchronize, reopened, labeled, unlabeled ]
-    # branches: [ main, next, release/* ]
+    branches: [ main, next, release/* ]
 
 jobs:
   paths_label:
