@@ -87,4 +87,4 @@ documentation:
   - "**/api-report/**"
 
 changeset-required:
-  - any: [server/routerlicious/**, "server/tinylicious/**"]
+  - any: ["server/routerlicious/**", "server/tinylicious/**"]
