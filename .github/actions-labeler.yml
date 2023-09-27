@@ -1,90 +1,90 @@
-# This file is a map of labels to repo glob paths. See https://github.com/marketplace/actions/labeler
-# for more details.
+# # This file is a map of labels to repo glob paths. See https://github.com/marketplace/actions/labeler
+# # for more details.
 
-"area: build":
-  - ".github/*"
-  - ".github/workflows/**"
-  - "build-tools/**"
-  - "common/build/**"
-  - "tools/markdown-magic/**"
-  - "tools/pipelines/**"
+# "area: build":
+#   - ".github/*"
+#   - ".github/workflows/**"
+#   - "build-tools/**"
+#   - "common/build/**"
+#   - "tools/markdown-magic/**"
+#   - "tools/pipelines/**"
 
-"area: contributor experience":
-  - ".vscode/**"
+# "area: contributor experience":
+#   - ".vscode/**"
 
-"area: dds":
-  - experimental/dds/**
-  - packages/dds/**
+# "area: dds":
+#   - experimental/dds/**
+#   - packages/dds/**
 
-"area: dds: tree":
-  - experimental/dds/tree/**
-  - experimental/dds/tree2/**
-  - packages/dds/tree/**
+# "area: dds: tree":
+#   - experimental/dds/tree/**
+#   - experimental/dds/tree2/**
+#   - packages/dds/tree/**
 
-"area: dds: propertydds":
-  - experimental/PropertyDDS/**
+# "area: dds: propertydds":
+#   - experimental/PropertyDDS/**
 
-"area: dds: sharedstring":
-  - packages/dds/sequence/**
+# "area: dds: sharedstring":
+#   - packages/dds/sequence/**
 
-"area: definitions":
-  - common/lib/container-definitions/**
-  - common/lib/core-interfaces/**
-  - common/lib/driver-definitions/**
+# "area: definitions":
+#   - common/lib/container-definitions/**
+#   - common/lib/core-interfaces/**
+#   - common/lib/driver-definitions/**
 
-"area: dev experience":
-  - experimental/framework/**
+# "area: dev experience":
+#   - experimental/framework/**
 
-"area: driver":
-  - packages/drivers/**
+# "area: driver":
+#   - packages/drivers/**
 
-"area: examples":
-  - examples/**
-  - experimental/examples/**
+# "area: examples":
+#   - examples/**
+#   - experimental/examples/**
 
-"area: framework":
-  - packages/framework/**
+# "area: framework":
+#   - packages/framework/**
 
-"area: loader":
-  - packages/loader/**
+# "area: loader":
+#   - packages/loader/**
 
-"area: odsp-driver":
-  - packages/drivers/*odsp*/**
-  - packages/utils/odsp-doclib-utils/**
+# "area: odsp-driver":
+#   - packages/drivers/*odsp*/**
+#   - packages/utils/odsp-doclib-utils/**
 
-# Add "area: repo" label to any root or .github changes
-"area: repo":
-  - any: ["*", ".github/**", "!BREAKING.md"]
+# # Add "area: repo" label to any root or .github changes
+# "area: repo":
+#   - any: ["*", ".github/**", "!BREAKING.md"]
 
-"area: runtime":
-  - packages/runtime/**
+# "area: runtime":
+#   - packages/runtime/**
 
-"scott test":
-  - server/**
+# "scott test":
+#   - server/**
 
-"area: tests":
-  - packages/test/**
+# "area: tests":
+#   - packages/test/**
 
-"area: tools":
-  - any: ["common/build/**", "tools/**", "!tools/markdown-magic/**"]
+# "area: tools":
+#   - any: ["common/build/**", "tools/**", "!tools/markdown-magic/**"]
 
-"area: website":
-  - any: ["docs/**", "!docs/content/**"]
+# "area: website":
+#   - any: ["docs/**", "!docs/content/**"]
 
-"breaking change":
-  - BREAKING.md
+# "breaking change":
+#   - BREAKING.md
 
-dependencies:
-  - lerna-package-lock.json
-  - package-lock.json
-  - pnpm-lock.yaml
+# dependencies:
+#   - lerna-package-lock.json
+#   - package-lock.json
+#   - pnpm-lock.yaml
 
-documentation:
-  - docs/content/**
+# documentation:
+#   - docs/content/**
 
-# flag changes to public APIs so they can be reviewed to see if they're breaking
-"public api change":
-  - "**/api-report/**"
+# # flag changes to public APIs so they can be reviewed to see if they're breaking
+# "public api change":
+#   - "**/api-report/**"
 
-"changeset-required":
-  - any: ["server/routerlicious/**", "server/tinylicious/**"]
+# "changeset-required":
+#   - any: ["server/routerlicious/**", "server/tinylicious/**"]
