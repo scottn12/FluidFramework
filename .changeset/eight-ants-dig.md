@@ -2,6 +2,6 @@
 "@fluidframework/protocol-base": minor
 ---
 
-test changess
+test changes
 
 testing breaking change w/ server package
