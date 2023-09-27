@@ -86,5 +86,5 @@ documentation:
 "public api change":
   - "**/api-report/**"
 
-changeset-required:
+"changeset-required":
   - any: ["server/routerlicious/**", "server/tinylicious/**"]
