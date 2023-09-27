@@ -59,7 +59,7 @@
 "area: runtime":
   - packages/runtime/**
 
-"area: server":
+"scott test":
   - server/**
 
 "area: tests":
@@ -87,4 +87,4 @@ documentation:
   - "**/api-report/**"
 
 "changeset-required":
-  - any: ["server/routerlicious/**", "server/tinylicious/**"]
+  - server/routerlicious/**
