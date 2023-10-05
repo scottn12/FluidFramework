@@ -138,7 +138,6 @@ export class SharedMap extends SharedObject<ISharedMapEvents> implements IShared
 		attributes: IChannelAttributes,
 	) {
 		super(id, runtime, attributes, "fluid_map_");
-		console.log("another test");
 		this.kernel = new MapKernel(
 			this.serializer,
 			this.handle,
