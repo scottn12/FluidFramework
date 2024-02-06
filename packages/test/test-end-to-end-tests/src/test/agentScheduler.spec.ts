@@ -9,7 +9,7 @@ import {
 	IAgentScheduler,
 	TaskSubscription,
 } from "@fluidframework/agent-scheduler";
-import { IContainer, IProvideRuntimeFactory } from "@fluidframework/container-definitions";
+import { IContainer } from "@fluidframework/container-definitions";
 
 import {
 	ITestObjectProvider,
@@ -26,24 +26,29 @@ let writeModeCount = 0;
 const forceWriteMode = async (scheduler: IAgentScheduler): Promise<void> =>
 	scheduler.register(`makeWriteMode ${writeModeCount++}`);
 
-describeCompat("AgentScheduler", "FullCompat", (getTestObjectProvider, apis) => {
-	const TestContainerRuntimeFactory = createTestContainerRuntimeFactory(
-		apis.containerRuntime.ContainerRuntime,
-	);
-	const runtimeFactory: IProvideRuntimeFactory = {
-		IRuntimeFactory: new TestContainerRuntimeFactory(
-			AgentSchedulerFactory.type,
-			new AgentSchedulerFactory(),
-			{},
-		),
+describeCompat.only("AgentScheduler", "FullCompat", (getTestObjectProvider, apis) => {
+	const getContainerRuntimeFactory = (forLoad: boolean) => {
+		const runtime =
+			forLoad && apis.containerRuntimeForLoading !== undefined
+				? apis.containerRuntimeForLoading.ContainerRuntime
+				: apis.containerRuntime.ContainerRuntime;
+		const TestContainerRuntimeFactory = createTestContainerRuntimeFactory(runtime);
+		return {
+			IRuntimeFactory: new TestContainerRuntimeFactory(
+				AgentSchedulerFactory.type,
+				new AgentSchedulerFactory(),
+				{},
+			),
+		};
 	};
 
 	let provider: ITestObjectProvider;
 
 	const createContainer = async (): Promise<IContainer> =>
-		provider.createContainer(runtimeFactory);
+		provider.createContainer(getContainerRuntimeFactory(false));
+	const loadContainer = async (): Promise<IContainer> =>
+		provider.loadContainer(getContainerRuntimeFactory(true));
 
-	const loadContainer = async (): Promise<IContainer> => provider.loadContainer(runtimeFactory);
 	const getAgentScheduler = async (container: IContainer): Promise<IAgentScheduler> => {
 		const scheduler = await getContainerEntryPointBackCompat<IAgentScheduler>(container);
 		await forceWriteMode(scheduler);
@@ -59,7 +64,7 @@ describeCompat("AgentScheduler", "FullCompat", (getTestObjectProvider, apis) => 
 
 		beforeEach("createScheduler", async function () {
 			// TODO: Re-enable after cross version compat bugs are fixed - ADO:6979
-			if (provider.type === "TestObjectProviderWithVersionedLoad") {
+			if (provider.type !== "TestObjectProviderWithVersionedLoad") {
 				this.skip();
 			}
 			const container = await createContainer();
@@ -123,7 +128,7 @@ describeCompat("AgentScheduler", "FullCompat", (getTestObjectProvider, apis) => 
 
 		beforeEach("createContainersAndSchedulers", async function () {
 			// TODO: Re-enable after cross version compat bugs are fixed - ADO:6979
-			if (provider.type === "TestObjectProviderWithVersionedLoad") {
+			if (provider.type !== "TestObjectProviderWithVersionedLoad") {
 				this.skip();
 			}
 			// Create a new Container for the first document.
@@ -261,7 +266,7 @@ describeCompat("AgentScheduler", "FullCompat", (getTestObjectProvider, apis) => 
 
 		beforeEach("createContainersAndSchedulers", async function () {
 			// TODO: Re-enable after cross version compat bugs are fixed - ADO:6979
-			if (provider.type === "TestObjectProviderWithVersionedLoad") {
+			if (provider.type !== "TestObjectProviderWithVersionedLoad") {
 				this.skip();
 			}
 			container1 = await createContainer();
