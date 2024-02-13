@@ -40,11 +40,11 @@ describeCompat("GC Data Store Aliased Full Compat", "FullCompat", (getTestObject
 		});
 	}
 
-	it("An unreferenced datastore when aliased becomes referenced.", async function () {
+	it.only("An unreferenced datastore when aliased becomes referenced.", async function () {
 		// TODO: Re-enable after cross version compat bugs are fixed - ADO:6978
-		if (provider.type === "TestObjectProviderWithVersionedLoad") {
-			this.skip();
-		}
+		// if (provider.type === "TestObjectProviderWithVersionedLoad") {
+		// 	this.skip();
+		// }
 		const container1 = await provider.makeTestContainer(defaultGCConfig);
 		const container2 = await provider.loadTestContainer(defaultGCConfig);
 		const mainDataStore1 = await getContainerEntryPointBackCompat<ITestDataObject>(container1);
@@ -54,7 +54,15 @@ describeCompat("GC Data Store Aliased Full Compat", "FullCompat", (getTestObject
 
 		const dataStore2 =
 			await mainDataStore1._context.containerRuntime.createDataStore(TestDataObjectType);
-		const dataObject2 = (await dataStore2.entryPoint?.get()) as ITestDataObject;
+		const dataObject2 =
+			((await dataStore2.entryPoint?.get()) as ITestDataObject) ??
+			// Added to support back compat where entryPoint is not available.
+			// Can be removed when we no longer support `^2.0.0-internal.7.0.0`
+			((
+				await (mainDataStore2._context.containerRuntime as any).request({
+					url: "/",
+				})
+			).value as ITestDataObject);
 		// Make dataStore2 visible but unreferenced by referencing/unreferencing it.
 		mainDataStore1._root.set("dataStore2", dataStore2.entryPoint);
 		mainDataStore1._root.delete("dataStore2");
@@ -81,7 +89,11 @@ describeCompat("GC Data Store Aliased Full Compat", "FullCompat", (getTestObject
 		const containerRuntime2 = mainDataStore2._context
 			.containerRuntime as unknown as IContainerRuntime;
 		assert.doesNotThrow(
-			async () => containerRuntime2.getAliasedDataStoreEntryPoint(alias),
+			async () =>
+				containerRuntime2.getAliasedDataStoreEntryPoint?.(alias) ??
+				// Added to support back compat where entryPoint is not available.
+				// Can be removed when we no longer support `^2.0.0-internal.7.0.0`
+				(containerRuntime2 as any).getRootDataStore(alias),
 			"Aliased datastore should be root as it is aliased!",
 		);
 		summaryWithStats = await waitForSummary(container2);
