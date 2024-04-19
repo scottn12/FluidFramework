@@ -16,7 +16,7 @@ import { timeoutPromise } from "@fluidframework/test-utils/internal";
 
 import { createAzureClient, createAzureClientLegacy } from "./AzureClientFactory.js";
 
-describe.only("Container copy scenarios", () => {
+describe.only("CrossVersion compat testing", () => {
 	const connectTimeoutMs = 10_000;
 	let client1: AzureClient;
 	let client2: AzureClientLegacy;
