@@ -234,7 +234,7 @@ class DOProviderContainerRuntimeFactory extends BaseContainerRuntimeFactory {
 				flushMode: FlushMode.Immediate,
 				// The runtime compressor is required to be on to use @fluidframework/tree.
 				enableRuntimeIdCompressor: "on",
-				explicitSchemaControl: true,
+				explicitSchemaControl: false,
 			},
 			provideEntryPoint,
 		});
