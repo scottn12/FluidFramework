@@ -77,6 +77,8 @@ describe.only("CrossVersion compat testing", () => {
 			});
 		}
 
+		(containerLegacy.initialObjects.map1 as SharedMapLegacy).set("key", "value");
+
 		const resources = client1.getContainer(containerLegacyId, schema);
 		await assert.doesNotReject(resources, () => true, "container could not be loaded");
 
