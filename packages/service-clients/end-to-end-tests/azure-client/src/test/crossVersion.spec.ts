@@ -18,9 +18,9 @@ import { createAzureClient, createAzureClientLegacy } from "./AzureClientFactory
 
 describe.only("CrossVersion compat testing", () => {
 	const connectTimeoutMs = 10_000;
-	let client1: AzureClient;
-	let client2: AzureClientLegacy;
-	const schema = {
+	let clientCurrent: AzureClient;
+	let clientLegacy: AzureClientLegacy;
+	const schemaCurrent = {
 		initialObjects: {
 			map1: SharedMap,
 		},
@@ -33,65 +33,67 @@ describe.only("CrossVersion compat testing", () => {
 	};
 
 	beforeEach("createAzureClients", () => {
-		client1 = createAzureClient();
-		client2 = createAzureClientLegacy();
+		clientCurrent = createAzureClient();
+		clientLegacy = createAzureClientLegacy();
 	});
 
 	it("1.X container can get container made by 2.X", async () => {
-		const { container } = await client1.createContainer(schema);
-		const containerId = await container.attach();
+		const { container: container1 } = await clientCurrent.createContainer(schemaCurrent);
+		const containerId = await container1.attach();
 
-		if (container.connectionState !== ConnectionState.Connected) {
-			await timeoutPromise((resolve) => container.once("connected", () => resolve()), {
+		if (container1.connectionState !== ConnectionState.Connected) {
+			await timeoutPromise((resolve) => container1.once("connected", () => resolve()), {
 				durationMs: connectTimeoutMs,
-				errorMsg: "container connect() timeout",
+				errorMsg: "container1 connect() timeout",
 			});
 		}
-		container.initialObjects.map1.set("key", "value");
+		for (let i = 0; i < 10; i++) {
+			container1.initialObjects.map1.set("key", `value${i}`);
+		}
 
-		const resources = client2.getContainer(containerId, schemaLegacy);
+		const resources = clientLegacy.getContainer(containerId, schemaLegacy);
 		await assert.doesNotReject(resources, () => true, "container could not be loaded");
 
-		const { container: containerLegacy } = await resources;
-		if (containerLegacy.connectionState !== ConnectionState.Connected) {
-			await timeoutPromise((resolve) => containerLegacy.once("connected", () => resolve()), {
+		const { container: container2 } = await resources;
+		if (container2.connectionState !== ConnectionState.Connected) {
+			await timeoutPromise((resolve) => container2.once("connected", () => resolve()), {
 				durationMs: connectTimeoutMs,
-				errorMsg: "container connect() timeout",
+				errorMsg: "container2 connect() timeout",
 			});
 		}
 
-		const result = (await (containerLegacy.initialObjects.map1 as SharedMapLegacy).get(
+		const result = (await (container2.initialObjects.map1 as SharedMapLegacy).get(
 			"key",
 		)) as string;
-		assert.strictEqual(result, "value", "Value not found in copied container");
+		assert.strictEqual(result, "value9", "Value not found in copied container");
 	});
 
 	it("2.X container can get container made by 1.X", async () => {
-		const { container: containerLegacy } = await client2.createContainer(schemaLegacy);
-		const containerLegacyId = await containerLegacy.attach();
+		const { container: container1 } = await clientLegacy.createContainer(schemaLegacy);
+		const containerId = await container1.attach();
 
-		if (containerLegacy.connectionState !== ConnectionState.Connected) {
-			await timeoutPromise((resolve) => containerLegacy.once("connected", () => resolve()), {
+		if (container1.connectionState !== ConnectionState.Connected) {
+			await timeoutPromise((resolve) => container1.once("connected", () => resolve()), {
 				durationMs: connectTimeoutMs,
-				errorMsg: "container connect() timeout",
+				errorMsg: "container1 connect() timeout",
 			});
 		}
 
-		(containerLegacy.initialObjects.map1 as SharedMapLegacy).set("key", "value");
+		(container1.initialObjects.map1 as SharedMapLegacy).set("key", "value");
 
-		const resources = client1.getContainer(containerLegacyId, schema);
+		const resources = clientCurrent.getContainer(containerId, schemaCurrent);
 		await assert.doesNotReject(resources, () => true, "container could not be loaded");
 
-		const { container } = await resources;
+		const { container: container2 } = await resources;
 
-		if (container.connectionState !== ConnectionState.Connected) {
-			await timeoutPromise((resolve) => container.once("connected", () => resolve()), {
+		if (container2.connectionState !== ConnectionState.Connected) {
+			await timeoutPromise((resolve) => container2.once("connected", () => resolve()), {
 				durationMs: connectTimeoutMs,
-				errorMsg: "container connect() timeout",
+				errorMsg: "container2 connect() timeout",
 			});
 		}
 
-		const result = (await container.initialObjects.map1.get("key")) as string;
+		const result = (await container2.initialObjects.map1.get("key")) as string;
 		assert.strictEqual(result, "value", "Value not found in copied container");
 	});
 });
