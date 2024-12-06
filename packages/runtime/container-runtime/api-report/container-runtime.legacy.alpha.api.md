@@ -180,7 +180,7 @@ export class ContainerRuntime extends TypedEventEmitter<IContainerRuntimeEvents 
 }
 
 // @alpha
-export const currentDocumentVersionSchema = 1;
+export const currentDocumentVersionSchema = 2;
 
 // @alpha (undocumented)
 export const DefaultSummaryConfiguration: ISummaryConfiguration;
@@ -376,7 +376,7 @@ export type IDocumentSchemaChangeMessage = IDocumentSchema;
 
 // @alpha
 export type IDocumentSchemaCurrent = {
-    version: 1;
+    version: 2;
     refSeq: number;
     runtime: {
         [P in keyof IDocumentSchemaFeatures]?: IDocumentSchemaFeatures[P] extends boolean ? true : IDocumentSchemaFeatures[P];

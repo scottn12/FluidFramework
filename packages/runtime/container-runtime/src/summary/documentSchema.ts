@@ -122,7 +122,7 @@ export interface IDocumentSchemaFeatures {
  * @legacy
  * @alpha
  */
-export const currentDocumentVersionSchema = 1;
+export const currentDocumentVersionSchema = 2;
 
 /**
  * Current document schema.
@@ -131,7 +131,7 @@ export const currentDocumentVersionSchema = 1;
  */
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type IDocumentSchemaCurrent = {
-	version: 1;
+	version: 2;
 	refSeq: number;
 
 	runtime: {

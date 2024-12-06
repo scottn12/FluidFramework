@@ -234,7 +234,6 @@ import {
 	SummaryManager,
 	aliasBlobName,
 	chunksBlobName,
-	recentBatchInfoBlobName,
 	createRootSummarizerNodeWithGC,
 	electedSummarizerBlobName,
 	extractSummaryMetadataMessage,
@@ -931,23 +930,14 @@ export class ContainerRuntime
 			}
 		};
 
-		const [
-			chunks,
-			recentBatchInfo,
-			metadata,
-			electedSummarizerData,
-			aliases,
-			serializedIdCompressor,
-		] = await Promise.all([
-			tryFetchBlob<[string, string[]][]>(chunksBlobName),
-			tryFetchBlob<ReturnType<DuplicateBatchDetector["getRecentBatchInfoForSummary"]>>(
-				recentBatchInfoBlobName,
-			),
-			tryFetchBlob<IContainerRuntimeMetadata>(metadataBlobName),
-			tryFetchBlob<ISerializedElection>(electedSummarizerBlobName),
-			tryFetchBlob<[string, string][]>(aliasBlobName),
-			tryFetchBlob<SerializedIdCompressorWithNoSession>(idCompressorBlobName),
-		]);
+		const [chunks, metadata, electedSummarizerData, aliases, serializedIdCompressor] =
+			await Promise.all([
+				tryFetchBlob<[string, string[]][]>(chunksBlobName),
+				tryFetchBlob<IContainerRuntimeMetadata>(metadataBlobName),
+				tryFetchBlob<ISerializedElection>(electedSummarizerBlobName),
+				tryFetchBlob<[string, string][]>(aliasBlobName),
+				tryFetchBlob<SerializedIdCompressorWithNoSession>(idCompressorBlobName),
+			]);
 
 		// read snapshot blobs needed for BlobManager to load
 		const blobManagerSnapshot = await loadBlobManagerLoadInfo(context);
@@ -1124,10 +1114,9 @@ export class ContainerRuntime
 			provideEntryPoint,
 			requestHandler,
 			undefined, // summaryConfiguration
-			recentBatchInfo,
 		);
 
-		runtime.blobManager.stashedBlobsUploadP.then(
+		runtime.blobManager.trackPendingStashedUploads().then(
 			() => {
 				// make sure we didn't reconnect before the promise resolved
 				if (runtime.delayConnectClientId !== undefined && !runtime.disposed) {
@@ -1503,7 +1492,6 @@ export class ContainerRuntime
 			// the runtime configuration overrides
 			...runtimeOptions.summaryOptions?.summaryConfigOverrides,
 		},
-		recentBatchInfo?: [number, string][],
 	) {
 		super();
 
@@ -1544,7 +1532,7 @@ export class ContainerRuntime
 			compressionAlgorithm: CompressionAlgorithms.lz4,
 		};
 
-		assert(isIDeltaManagerFull(deltaManager), 0xa80 /* Invalid delta manager */);
+		assert(isIDeltaManagerFull(deltaManager), "Invalid delta manager");
 		this.innerDeltaManager = deltaManager;
 
 		// Here we could wrap/intercept on these functions to block/modify outgoing messages if needed.
@@ -1719,7 +1707,7 @@ export class ContainerRuntime
 		// It maintains a cache of all batchIds/sequenceNumbers within the collab window.
 		// Don't waste resources doing so if not needed.
 		if (this.offlineEnabled) {
-			this.duplicateBatchDetector = new DuplicateBatchDetector(recentBatchInfo);
+			this.duplicateBatchDetector = new DuplicateBatchDetector();
 		}
 
 		if (context.attachState === AttachState.Attached) {
@@ -2426,12 +2414,6 @@ export class ContainerRuntime
 			addBlobToSummary(summaryTree, chunksBlobName, content);
 		}
 
-		const recentBatchInfo =
-			this.duplicateBatchDetector?.getRecentBatchInfoForSummary(telemetryContext);
-		if (recentBatchInfo !== undefined) {
-			addBlobToSummary(summaryTree, recentBatchInfoBlobName, JSON.stringify(recentBatchInfo));
-		}
-
 		const dataStoreAliases = this.channelCollection.aliases;
 		if (dataStoreAliases.size > 0) {
 			addBlobToSummary(summaryTree, aliasBlobName, JSON.stringify([...dataStoreAliases]));
@@ -2669,21 +2651,20 @@ export class ContainerRuntime
 
 		this._connected = connected;
 
-		if (connected) {
+		if (!connected) {
+			this._signalTracking.signalsLost = 0;
+			this._signalTracking.signalsOutOfOrder = 0;
+			this._signalTracking.signalTimestamp = 0;
+			this._signalTracking.signalsSentSinceLastLatencyMeasurement = 0;
+			this._signalTracking.totalSignalsSentInLatencyWindow = 0;
+			this._signalTracking.roundTripSignalSequenceNumber = undefined;
+			this._signalTracking.trackingSignalSequenceNumber = undefined;
+			this._signalTracking.minimumTrackingSignalSequenceNumber = undefined;
+		} else {
 			assert(
 				this.attachState === AttachState.Attached,
 				0x3cd /* Connection is possible only if container exists in storage */,
 			);
-			if (changeOfState) {
-				this._signalTracking.signalsLost = 0;
-				this._signalTracking.signalsOutOfOrder = 0;
-				this._signalTracking.signalTimestamp = 0;
-				this._signalTracking.signalsSentSinceLastLatencyMeasurement = 0;
-				this._signalTracking.totalSignalsSentInLatencyWindow = 0;
-				this._signalTracking.roundTripSignalSequenceNumber = undefined;
-				this._signalTracking.trackingSignalSequenceNumber = undefined;
-				this._signalTracking.minimumTrackingSignalSequenceNumber = undefined;
-			}
 		}
 
 		// Fail while disconnected
@@ -3228,7 +3209,16 @@ export class ContainerRuntime
 		};
 
 		// Only collect signal telemetry for broadcast messages sent by the current client.
-		if (message.clientId === this.clientId) {
+		if (
+			message.clientId === this.clientId &&
+			// jason-ha: This `connected` check seems incorrect. Signals that come through
+			// here must have been received while connected to service and there is no need
+			// to avoid processing when connection has dropped. Because container runtime's
+			// `connected` (and `_connected`) state also reflects some ops state, it may
+			//  easily be false when newly connected and signal tracking may very well
+			// complain lost signals (that were simply skipped per this check).
+			this.connected
+		) {
 			this.processSignalForTelemetry(envelope);
 		}
 
@@ -4613,6 +4603,7 @@ export class ContainerRuntime
 				this.channelCollection.rollback(type, contents, localOpMetadata);
 				break;
 			default:
+				// Don't check message.compatDetails because this is for rolling back a local op so the type will be known
 				throw new Error(`Can't rollback ${type}`);
 		}
 	}
