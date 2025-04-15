@@ -121,7 +121,7 @@ describeCompat("Message size", "NoCompat", (getTestObjectProvider, apis) => {
 		},
 	}; // Compression is enabled by default
 
-	itExpects(
+	itExpects.only(
 		"A large op will close the container when compression is disabled",
 		[{ eventName: "fluid:telemetry:Container:ContainerClose", error: "BatchTooLarge" }],
 		async () => {

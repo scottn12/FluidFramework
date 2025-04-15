@@ -5,6 +5,10 @@
 
 import { assert } from "@fluidframework/core-utils/internal";
 import { DataProcessingError } from "@fluidframework/telemetry-utils/internal";
+// eslint-disable-next-line import/no-internal-modules
+import semverSatisfies from "semver/functions/satisfies.js";
+// eslint-disable-next-line import/no-internal-modules
+import semverValidRange from "semver/functions/valid.js";
 
 import { pkgVersion } from "../packageVersion.js";
 
@@ -108,6 +112,11 @@ export interface IDocumentSchemaFeatures {
 	 * metadata.
 	 */
 	disallowedVersions: string[];
+
+	/**
+	 * TODO: TSDoc
+	 */
+	disallowedVersionRange: string | undefined;
 }
 
 /**
@@ -219,6 +228,30 @@ class CheckVersions implements IProperty<string[] | undefined> {
 	}
 }
 
+class CheckVersionRange implements IProperty<string | undefined> {
+	// document schema always wins!
+	public and(currentDocSchema?: string, desiredDocSchema?: string): string | undefined {
+		return currentDocSchema;
+	}
+
+	public or(currentSchema?: string, desiredDocSchema?: string): string | undefined {
+		if (currentSchema === undefined) {
+			return desiredDocSchema;
+		}
+		if (desiredDocSchema === undefined) {
+			return currentSchema;
+		}
+		return currentSchema;
+	}
+
+	public validate(t: unknown): boolean {
+		return (
+			t === undefined ||
+			(typeof t === "string" && semverValidRange(t) !== null && semverSatisfies(pkgVersion, t))
+		);
+	}
+}
+
 /**
  * Helper structure to valida if a schema is compatible with existing code.
  */
@@ -228,6 +261,7 @@ const documentSchemaSupportedConfigs = {
 	opGroupingEnabled: new TrueOrUndefined(),
 	compressionLz4: new TrueOrUndefined(),
 	disallowedVersions: new CheckVersions(),
+	disallowedVersionRange: new CheckVersionRange(),
 };
 
 /**

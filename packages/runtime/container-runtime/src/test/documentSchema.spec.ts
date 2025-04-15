@@ -38,6 +38,7 @@ describe("Runtime", () => {
 		opGroupingEnabled: false,
 		idCompressorMode: "delayed",
 		disallowedVersions: [],
+		disallowedVersionRange: undefined, // TODO:
 	};
 
 	function createController(config: unknown) {

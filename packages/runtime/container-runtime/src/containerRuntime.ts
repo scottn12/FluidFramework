@@ -154,6 +154,7 @@ import {
 import {
 	defaultCompatibilityMode,
 	getConfigsForCompatMode,
+	getDisallowedVersions,
 	isValidCompatMode,
 	type IContainerRuntimeOptionsVersionDependent,
 	type SemanticVersion,
@@ -1007,6 +1008,10 @@ export class ContainerRuntime
 			compressionOptions.minimumBatchSizeInBytes !== Number.POSITIVE_INFINITY &&
 			compressionOptions.compressionAlgorithm === "lz4";
 
+		const disallowedVersionRange =
+			// TODO: explain pls
+			compatibilityMode === defaultCompatibilityMode ? undefined : `>=${compatibilityMode}`;
+		const disallowedVersions = getDisallowedVersions(compatibilityMode);
 		const documentSchemaController = new DocumentsSchemaController(
 			existing,
 			protocolSequenceNumber,
@@ -1016,7 +1021,8 @@ export class ContainerRuntime
 				compressionLz4,
 				idCompressorMode,
 				opGroupingEnabled: enableGroupedBatching,
-				disallowedVersions: [],
+				disallowedVersions,
+				disallowedVersionRange,
 			},
 			(schema) => {
 				runtime.onSchemaChange(schema);

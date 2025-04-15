@@ -3,10 +3,13 @@
  * Licensed under the MIT License.
  */
 
+import { assert } from "@fluidframework/core-utils/internal";
 import { FlushMode } from "@fluidframework/runtime-definitions/internal";
 // The semver package documents and encourages these imports for users that only need some of the semver functionality.
 // eslint-disable-next-line import/no-internal-modules
 import semverGte from "semver/functions/gte.js";
+// eslint-disable-next-line import/no-internal-modules
+import semverLt from "semver/functions/lt.js";
 // eslint-disable-next-line import/no-internal-modules
 import semverLte from "semver/functions/lte.js";
 // eslint-disable-next-line import/no-internal-modules
@@ -160,4 +163,75 @@ export function isValidCompatMode(compatibilityMode: SemanticVersion): boolean {
 			semverValid(compatibilityMode) !== null &&
 			semverLte(compatibilityMode, pkgVersion))
 	);
+}
+
+/**
+ * List of all 2.x versions where the FF runtime's disallowedVersions implementation uses exact versions.
+ * TODO: How do we maintain this list when patches are published? We don't want to fetch these versions from the registry since that will be slow.
+ */
+const packages2x = [
+	"2.0.0",
+	"2.0.1",
+	"2.0.2",
+	"2.0.3",
+	"2.0.4",
+	"2.0.5",
+	"2.1.0",
+	"2.0.6",
+	"2.2.0",
+	"2.3.0",
+	"2.0.7",
+	"2.1.1",
+	"2.2.1",
+	"2.0.8",
+	"2.0.9",
+	"2.1.2",
+	"2.2.2",
+	"2.3.1",
+	"2.4.0",
+	"2.5.0",
+	"2.10.0",
+	"2.11.0",
+	"2.12.0",
+	"2.13.0",
+	"2.20.0",
+	"2.21.0",
+	"2.22.0",
+	"2.22.1",
+	"2.23.0",
+	"2.30.0",
+	"2.31.0",
+	"2.31.1",
+];
+
+/**
+ * Returns the disallowed versions for a given compatibility mode.
+ */
+export function getDisallowedVersions(
+	compatibilityMode: IContainerRuntimeOptionsInternal["compatibilityMode"],
+): string[] {
+	assert(compatibilityMode !== undefined, "compatibilityMode should be defined");
+
+	// TODO: explain
+	if (compatibilityMode === "pre-3.0-default") {
+		return [];
+	}
+
+	// If the compatibility mode is less than "2.0.0", then we don't need to disallow any versions.
+	// This is because any version less than 2.x will not have the disallowedVersions mechanism, and
+	// will instead by disallowed by explicitSchemaControl.
+	if (semverLte(compatibilityMode, "2.0.0")) {
+		return [];
+	}
+
+	// If the compatibility mode is greater than "2.0.0", then we need to start disallowing 2.x versions.
+	// However, this is a bit tricky since some 2.x versions's implementation of disallowedVersions uses exact version
+	// matchings (rather than semver comparisons).
+	// As a workaround, we need to add all exact versions of 2.x (up until the compatibilityMode version) that use exact
+	// version matching to disallow themselves.
+	return [
+		...packages2x.filter((version: string) => {
+			return semverLt(version, compatibilityMode);
+		}),
+	];
 }
