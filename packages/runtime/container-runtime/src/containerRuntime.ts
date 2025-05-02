@@ -140,6 +140,7 @@ import {
 	tagCodeArtifacts,
 	normalizeError,
 } from "@fluidframework/telemetry-utils/internal";
+import { gte } from "semver-ts";
 import { v4 as uuid } from "uuid";
 
 import { BindBatchTracker } from "./batchTracker.js";
@@ -1038,6 +1039,11 @@ export class ContainerRuntime
 			compressionOptions.minimumBatchSizeInBytes !== Number.POSITIVE_INFINITY &&
 			compressionOptions.compressionAlgorithm === "lz4";
 
+		// minVersionForCollab enforcement only supported 2.40.0 or later is only supported in 2.40.0 and later.
+		const minVersionForCollabForDocSchema = gte(minVersionForCollab, "2.40.0")
+			? minVersionForCollab
+			: undefined;
+
 		const documentSchemaController = new DocumentsSchemaController(
 			existing,
 			protocolSequenceNumber,
@@ -1049,6 +1055,7 @@ export class ContainerRuntime
 				opGroupingEnabled: enableGroupedBatching,
 				createBlobPayloadPending,
 				disallowedVersions: [],
+				minVersionForCollab: minVersionForCollabForDocSchema,
 			},
 			(schema) => {
 				runtime.onSchemaChange(schema);

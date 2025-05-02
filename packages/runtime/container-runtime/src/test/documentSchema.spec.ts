@@ -40,6 +40,7 @@ describe("Runtime", () => {
 		idCompressorMode: "delayed",
 		createBlobPayloadPending: undefined,
 		disallowedVersions: [],
+		minVersionForCollab: undefined,
 	} as const satisfies IDocumentSchemaFeatures;
 
 	function createController(config: unknown) {
@@ -214,6 +215,44 @@ describe("Runtime", () => {
 		]);
 	});
 
+	it("minVersionForCollab", () => {
+		const controller = new DocumentsSchemaController(
+			true, // existing,
+			0, // snapshotSequenceNumber
+			validConfig, // old schema,
+			{ ...features, minVersionForCollab: undefined },
+			() => {}, // onSchemaChange
+		);
+
+		assert(controller.sessionSchema.runtime.minVersionForCollab === undefined);
+		assert(controller.maybeSendSchemaMessage() === undefined);
+
+		testWrongConfig({
+			...validConfig,
+			runtime: { ...validConfig.runtime, minVersionForCollab: "aaa" },
+		});
+		testWrongConfig({
+			...validConfig,
+			runtime: { ...validConfig.runtime, minVersionForCollab: "0.56.0" },
+		});
+		createController({
+			...validConfig,
+			runtime: { ...validConfig.runtime, minVersionForCollab: "1.0.0" },
+		});
+		createController({
+			...validConfig,
+			runtime: { ...validConfig.runtime, minVersionForCollab: "2.20.0" },
+		});
+		createController({
+			...validConfig,
+			runtime: { ...validConfig.runtime, minVersionForCollab: "2.0.0-defaults" },
+		});
+		createController({
+			...validConfig,
+			runtime: { ...validConfig.runtime, minVersionForCollab: pkgVersion },
+		});
+	});
+
 	it("wrong values for known properties", () => {
 		testWrongConfig({
 			...validConfig,
@@ -305,6 +344,7 @@ describe("Runtime", () => {
 					opGroupingEnabled: boolToProp(featuresModified.opGroupingEnabled),
 					createBlobPayloadPending: featuresModified.createBlobPayloadPending,
 					disallowedVersions: arrayToProp(featuresModified.disallowedVersions),
+					minVersionForCollab: featuresModified.minVersionForCollab,
 				},
 			};
 			assert.deepEqual(

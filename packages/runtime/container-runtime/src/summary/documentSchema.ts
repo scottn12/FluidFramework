@@ -5,7 +5,9 @@
 
 import { assert } from "@fluidframework/core-utils/internal";
 import { DataProcessingError } from "@fluidframework/telemetry-utils/internal";
+import { gte } from "semver-ts";
 
+import { isValidMinVersionForCollab, type SemanticVersion } from "../compatUtils.js";
 import { pkgVersion } from "../packageVersion.js";
 
 /**
@@ -109,6 +111,11 @@ export interface IDocumentSchemaFeatures {
 	 * metadata.
 	 */
 	disallowedVersions: string[];
+
+	/**
+	 * TODO: TSDoc
+	 */
+	minVersionForCollab: string | undefined;
 }
 
 /**
@@ -140,6 +147,7 @@ interface IProperty<T = unknown> {
 	and: (currentDocSchema: T, desiredDocSchema: T) => T;
 	or: (currentDocSchema: T, desiredDocSchema: T) => T;
 	validate(t: unknown): boolean;
+	warn?(t: unknown): boolean;
 }
 
 class TrueOrUndefined implements IProperty<true | undefined> {
@@ -220,6 +228,41 @@ class CheckVersions implements IProperty<string[] | undefined> {
 	}
 }
 
+class minVersionForCollabProperty implements IProperty<string | undefined> {
+	// TODO: make sure this never changes by new runtimes
+	// document schema always wins!
+	public and(currentDocSchema?: string, desiredDocSchema?: string): string | undefined {
+		return currentDocSchema;
+	}
+
+	public or(currentSchema?: string, desiredDocSchema?: string): string | undefined {
+		if (currentSchema === undefined) {
+			return desiredDocSchema;
+		}
+		if (desiredDocSchema === undefined) {
+			return currentSchema;
+		}
+		return currentSchema;
+	}
+
+	public validate(t: unknown): boolean {
+		return (
+			t === undefined ||
+			// We currently consider any valid semver version to be valid. In the future we may decide
+			// to move the `gte` check to validate.
+			(typeof t === "string" && isValidMinVersionForCollab(t as SemanticVersion))
+		);
+	}
+
+	public warn(t: unknown): boolean {
+		return (
+			t === undefined ||
+			// We don't need to check if it's a valid semver, because that will be done in validate
+			(typeof t === "string" && gte(pkgVersion, t))
+		);
+	}
+}
+
 /**
  * Helper structure to valida if a schema is compatible with existing code.
  */
@@ -230,6 +273,7 @@ const documentSchemaSupportedConfigs = {
 	compressionLz4: new TrueOrUndefined(),
 	createBlobPayloadPending: new TrueOrUndefined(),
 	disallowedVersions: new CheckVersions(),
+	minVersionForCollab: new minVersionForCollabProperty(),
 };
 
 /**
@@ -263,6 +307,7 @@ function checkRuntimeCompatibility(
 	}
 
 	let unknownProperty: string | undefined;
+	let warnProperty: string | undefined;
 
 	const regSeq = documentSchema.refSeq;
 	// defence in depth - it should not be possible to get here anything other than integer, but worth validating it.
@@ -273,8 +318,13 @@ function checkRuntimeCompatibility(
 	} else {
 		for (const [name, value] of Object.entries(documentSchema.runtime)) {
 			const validator = documentSchemaSupportedConfigs[name] as IProperty | undefined;
-			if (validator === undefined || !validator.validate(value)) {
-				unknownProperty = `runtime/${name}`;
+			if (validator !== undefined) {
+				if (!validator.validate(value)) {
+					unknownProperty = `runtime/${name}`;
+				}
+				if (validator.warn !== undefined && !validator.warn(value)) {
+					warnProperty = `runtime/${name}`;
+				}
 			}
 		}
 	}
@@ -294,6 +344,18 @@ function checkRuntimeCompatibility(
 				schemaName,
 			},
 		);
+	}
+
+	const warnMsg = "Warning: Document may have incompatible schema";
+	if (warnProperty !== undefined) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const value = documentSchema[warnProperty];
+		console.warn({
+			msg: warnMsg,
+			property: warnProperty,
+			value: JSON.stringify(value),
+			schemaName,
+		});
 	}
 }
 
@@ -486,6 +548,7 @@ export class DocumentsSchemaController {
 				opGroupingEnabled: boolToProp(features.opGroupingEnabled),
 				createBlobPayloadPending: features.createBlobPayloadPending,
 				disallowedVersions: arrayToProp(features.disallowedVersions),
+				minVersionForCollab: features.minVersionForCollab,
 			},
 		};
 
