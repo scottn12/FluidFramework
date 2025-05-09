@@ -1041,6 +1041,17 @@ export class ContainerRuntime
 			compressionOptions.minimumBatchSizeInBytes !== Number.POSITIVE_INFINITY &&
 			compressionOptions.compressionAlgorithm === "lz4";
 
+		// DocumentSchema enforcement for `minVersionForCollab` is only supported when using
+		// minVersionForCollab >= 2.40.0
+		// TODO:
+		// const releaseMinVersionForCollabAdded = "2.40.0";
+		// const minVersionForCollabForDocSchema = gte(
+		// 	minVersionForCollab,
+		// 	releaseMinVersionForCollabAdded,
+		// )
+		// 	? minVersionForCollab
+		// 	: undefined;
+
 		const documentSchemaController = new DocumentsSchemaController(
 			existing,
 			protocolSequenceNumber,
@@ -1056,6 +1067,8 @@ export class ContainerRuntime
 			(schema) => {
 				runtime.onSchemaChange(schema);
 			},
+			minVersionForCollab,
+			logger,
 		);
 
 		if (compressionLz4 && !enableGroupedBatching) {
@@ -1465,6 +1478,8 @@ export class ContainerRuntime
 			supportedFeatures,
 			snapshotWithContents,
 		} = context;
+
+		this.minVersionForCollab = minVersionForCollab;
 
 		// In old loaders without dispose functionality, closeFn is equivalent but will also switch container to readonly mode
 		this.disposeFn = disposeFn ?? closeFn;
