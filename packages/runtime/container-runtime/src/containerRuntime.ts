@@ -1040,6 +1040,17 @@ export class ContainerRuntime
 			compressionOptions.minimumBatchSizeInBytes !== Number.POSITIVE_INFINITY &&
 			compressionOptions.compressionAlgorithm === "lz4";
 
+		// DocumentSchema enforcement for `minVersionForCollab` is only supported when using
+		// minVersionForCollab >= 2.40.0
+		// TODO:
+		// const releaseMinVersionForCollabAdded = "2.40.0";
+		// const minVersionForCollabForDocSchema = gte(
+		// 	minVersionForCollab,
+		// 	releaseMinVersionForCollabAdded,
+		// )
+		// 	? minVersionForCollab
+		// 	: undefined;
+
 		const documentSchemaController = new DocumentsSchemaController(
 			existing,
 			protocolSequenceNumber,
@@ -1055,6 +1066,8 @@ export class ContainerRuntime
 			(schema) => {
 				runtime.onSchemaChange(schema);
 			},
+			minVersionForCollab,
+			logger,
 		);
 
 		if (compressionLz4 && !enableGroupedBatching) {
@@ -1095,6 +1108,7 @@ export class ContainerRuntime
 			documentSchemaController,
 			featureGatesForTelemetry,
 			provideEntryPoint,
+			minVersionForCollab,
 			requestHandler,
 			undefined, // summaryConfiguration
 			recentBatchInfo,
@@ -1429,6 +1443,7 @@ export class ContainerRuntime
 		private readonly documentsSchemaController: DocumentsSchemaController,
 		featureGatesForTelemetry: Record<string, boolean | number | undefined>,
 		provideEntryPoint: (containerRuntime: IContainerRuntime) => Promise<FluidObject>,
+		private readonly minVersionForCollab: MinimumVersionForCollab,
 		private readonly requestHandler?: (
 			request: IRequest,
 			runtime: IContainerRuntime,
@@ -1462,6 +1477,8 @@ export class ContainerRuntime
 			supportedFeatures,
 			snapshotWithContents,
 		} = context;
+
+		this.minVersionForCollab = minVersionForCollab;
 
 		// In old loaders without dispose functionality, closeFn is equivalent but will also switch container to readonly mode
 		this.disposeFn = disposeFn ?? closeFn;
@@ -1937,6 +1954,7 @@ export class ContainerRuntime
 			telemetryDocumentId: this.telemetryDocumentId,
 			groupedBatchingEnabled: this.groupedBatchingEnabled,
 			initialSequenceNumber: this.deltaManager.initialSequenceNumber,
+			minVersionForCollab: this.minVersionForCollab,
 		});
 
 		ReportOpPerfTelemetry(this.clientId, this._deltaManager, this, this.baseLogger);

@@ -4,8 +4,13 @@
  */
 
 import { assert } from "@fluidframework/core-utils/internal";
-import { DataProcessingError } from "@fluidframework/telemetry-utils/internal";
+import {
+	DataProcessingError,
+	type ITelemetryLoggerExt,
+} from "@fluidframework/telemetry-utils/internal";
+import { lt } from "semver-ts";
 
+import { isValidMinVersionForCollab, type MinimumVersionForCollab } from "../compatUtils.js";
 import { pkgVersion } from "../packageVersion.js";
 
 /**
@@ -68,6 +73,9 @@ export interface IDocumentSchema {
 	refSeq: number;
 
 	runtime: Record<string, DocumentSchemaValueType>;
+
+	// TODO: TSDoc
+	minVersionForCollab: MinimumVersionForCollab;
 }
 
 /**
@@ -109,6 +117,17 @@ export interface IDocumentSchemaFeatures {
 	 * metadata.
 	 */
 	disallowedVersions: string[];
+
+	// /**
+	//  * Minimum version of the runtime that is supported for collaboration for this schema.
+	//  * If a client tries to open a session with a lower version than `minVersionForCollab`, two things may occur:
+	//  * 1. If there the client is unable to understand the document schema, it will fail to open the document as expected.
+	//  * 2. If the client is able to understand the document schema, it will be able to open the document, but we will
+	//  * send a warning to the telemetry logger. In the future, we may prevent such clients from opening the document.
+	//  *
+	//  * See {@link @fluidframework/container-runtime#LoadContainerRuntimeParams} for additional details on `minVersionForCollab`.
+	//  */
+	// minVersionForCollab: string | undefined;
 }
 
 /**
@@ -128,7 +147,7 @@ export const currentDocumentVersionSchema = 1;
 export type IDocumentSchemaCurrent = {
 	version: 1;
 	refSeq: number;
-
+	minVersionForCollab: MinimumVersionForCollab;
 	runtime: {
 		[P in keyof IDocumentSchemaFeatures]?: IDocumentSchemaFeatures[P] extends boolean
 			? true
@@ -140,6 +159,7 @@ interface IProperty<T = unknown> {
 	and: (currentDocSchema: T, desiredDocSchema: T) => T;
 	or: (currentDocSchema: T, desiredDocSchema: T) => T;
 	validate(t: unknown): boolean;
+	// warn?(t: unknown): boolean;
 }
 
 class TrueOrUndefined implements IProperty<true | undefined> {
@@ -220,6 +240,38 @@ class CheckVersions implements IProperty<string[] | undefined> {
 	}
 }
 
+class MinVersionForCollabProperty implements IProperty<MinimumVersionForCollab | undefined> {
+	public and(
+		currentDocSchema?: MinimumVersionForCollab,
+		desiredDocSchema?: MinimumVersionForCollab,
+	): MinimumVersionForCollab | undefined {
+		return currentDocSchema;
+	}
+
+	public or(
+		currentSchema?: MinimumVersionForCollab,
+		desiredDocSchema?: MinimumVersionForCollab,
+	): MinimumVersionForCollab | undefined {
+		// Once a minVersionForCollab is set, it stays there for the life of that document.
+		// TODO: Should we ever allow a schema update?
+		return currentSchema;
+	}
+
+	public validate(t: unknown): boolean {
+		// TODO: Using isValidMinVersionForCollab() is probably overkill, there's probably a better way
+		return t === undefined || isValidMinVersionForCollab(t as MinimumVersionForCollab);
+	}
+
+	public warn(t: unknown): boolean {
+		return (
+			t === undefined ||
+			// We don't need to check if it's a valid semver, because that will be done in validate.
+			// All we check is if the pkgVersion is less than minVersionForCollab. If so we should warn.
+			(typeof t === "string" && lt(pkgVersion, t))
+		);
+	}
+}
+
 /**
  * Helper structure to valida if a schema is compatible with existing code.
  */
@@ -230,6 +282,7 @@ const documentSchemaSupportedConfigs = {
 	compressionLz4: new TrueOrUndefined(),
 	createBlobPayloadPending: new TrueOrUndefined(),
 	disallowedVersions: new CheckVersions(),
+	minVersionForCollab: new MinVersionForCollabProperty(),
 };
 
 /**
@@ -240,6 +293,7 @@ const documentSchemaSupportedConfigs = {
 function checkRuntimeCompatibility(
 	documentSchema: IDocumentSchema | undefined,
 	schemaName: string,
+	logger: ITelemetryLoggerExt,
 ): void {
 	// Back-compat - we can't do anything about legacy documents.
 	// There is no way to validate them, so we are taking a guess that safe deployment processes used by a given app
@@ -263,6 +317,7 @@ function checkRuntimeCompatibility(
 	}
 
 	let unknownProperty: string | undefined;
+	let warnProperty: string | undefined;
 
 	const regSeq = documentSchema.refSeq;
 	// defence in depth - it should not be possible to get here anything other than integer, but worth validating it.
@@ -273,8 +328,14 @@ function checkRuntimeCompatibility(
 	} else {
 		for (const [name, value] of Object.entries(documentSchema.runtime)) {
 			const validator = documentSchemaSupportedConfigs[name] as IProperty | undefined;
-			if (validator === undefined || !validator.validate(value)) {
-				unknownProperty = `runtime/${name}`;
+			if (validator !== undefined) {
+				if (!validator.validate(value)) {
+					unknownProperty = `runtime/${name}`;
+				}
+				// Testing with !validator.warn :P
+				if (validator.warn !== undefined && !validator.warn(value)) {
+					warnProperty = `runtime/${name}`;
+				}
 			}
 		}
 	}
@@ -294,6 +355,28 @@ function checkRuntimeCompatibility(
 				schemaName,
 			},
 		);
+	}
+
+	const warnMsg = "Warning: Document may have incompatible schema";
+	if (warnProperty !== undefined) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const value = documentSchema[warnProperty];
+		logger.sendTelemetryEvent({
+			eventName: "ContainerRuntime:DocumentSchemaWarning",
+			msg: warnMsg,
+			property: warnProperty,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			value,
+			schemaName,
+		});
+		console.warn(warnMsg, {
+			eventName: "ContainerRuntime:DocumentSchemaWarning",
+			msg: warnMsg,
+			property: warnProperty,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			value,
+			schemaName,
+		});
 	}
 }
 
@@ -455,6 +538,8 @@ export class DocumentsSchemaController {
 	//    (and enable such options) will be made through the session.
 	public sessionSchema: IDocumentSchemaCurrent;
 
+	private readonly logger: ITelemetryLoggerExt;
+
 	/**
 	 * Constructs DocumentsSchemaController that controls current schema and processes around it, including changes in schema.
 	 * @param existing - Is the document existing document, or a new doc.
@@ -468,6 +553,8 @@ export class DocumentsSchemaController {
 		documentMetadataSchema: IDocumentSchema | undefined,
 		features: IDocumentSchemaFeatures,
 		private readonly onSchemaChange: (schema: IDocumentSchemaCurrent) => void,
+		private readonly minVersionForCollab: MinimumVersionForCollab,
+		logger: ITelemetryLoggerExt,
 	) {
 		// For simplicity, let's only support new schema features for explicit schema control mode
 		assert(
@@ -479,6 +566,8 @@ export class DocumentsSchemaController {
 		this.desiredSchema = {
 			version: currentDocumentVersionSchema,
 			refSeq: documentMetadataSchema?.refSeq ?? 0,
+			minVersionForCollab:
+				documentMetadataSchema?.minVersionForCollab ?? this.minVersionForCollab,
 			runtime: {
 				explicitSchemaControl: boolToProp(features.explicitSchemaControl),
 				compressionLz4: boolToProp(features.compressionLz4),
@@ -498,6 +587,7 @@ export class DocumentsSchemaController {
 					version: currentDocumentVersionSchema,
 					// see comment in summarizeDocumentSchema() on why it has to stay zero
 					refSeq: 0,
+					minVersionForCollab: this.minVersionForCollab,
 					// If it's existing document and it has no schema, then it was written by legacy client.
 					// If it's a new document, then we define it's legacy-related behaviors.
 					runtime: {
@@ -506,7 +596,9 @@ export class DocumentsSchemaController {
 				} satisfies IDocumentSchemaCurrent))
 			: this.desiredSchema;
 
-		checkRuntimeCompatibility(this.documentSchema, "document");
+		this.logger = logger;
+
+		checkRuntimeCompatibility(this.documentSchema, "document", this.logger);
 		this.validateSeqNumber(this.documentSchema.refSeq, snapshotSequenceNumber, "summary");
 
 		// Use legacy behavior only if both document and options tell us to use legacy.
@@ -537,9 +629,9 @@ export class DocumentsSchemaController {
 		}
 
 		// Validate that schema we are operating in is actually a schema we consider compatible with current runtime.
-		checkRuntimeCompatibility(this.desiredSchema, "desired");
-		checkRuntimeCompatibility(this.sessionSchema, "session");
-		checkRuntimeCompatibility(this.futureSchema, "future");
+		checkRuntimeCompatibility(this.desiredSchema, "desired", this.logger);
+		checkRuntimeCompatibility(this.sessionSchema, "session", this.logger);
+		checkRuntimeCompatibility(this.futureSchema, "future", this.logger);
 	}
 
 	public summarizeDocumentSchema(refSeq: number): IDocumentSchemaCurrent | undefined {
@@ -638,7 +730,7 @@ export class DocumentsSchemaController {
 			);
 
 			// Changes are in effect. Immediately check that this client understands these changes
-			checkRuntimeCompatibility(content, "change");
+			checkRuntimeCompatibility(content, "change", this.logger);
 
 			const schema: IDocumentSchema = { ...content, refSeq: sequenceNumber };
 			this.documentSchema = schema as IDocumentSchemaCurrent;

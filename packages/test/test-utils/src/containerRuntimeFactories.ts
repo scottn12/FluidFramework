@@ -11,6 +11,7 @@ import {
 	FluidDataStoreRegistry,
 	loadContainerRuntime,
 	type IContainerRuntimeOptions,
+	type MinimumVersionForCollab,
 } from "@fluidframework/container-runtime/internal";
 import type {
 	IContainerRuntime,
@@ -65,6 +66,11 @@ export interface ContainerRuntimeFactoryWithDefaultDataStoreProps {
 	 * created with this factory
 	 */
 	readonly provideEntryPoint?: (runtime: IContainerRuntime) => Promise<FluidObject>;
+
+	/**
+	 * TODO: TSDoc
+	 */
+	readonly minVersionForCollab?: MinimumVersionForCollab;
 }
 
 /**
@@ -110,6 +116,11 @@ export class ContainerRuntimeFactoryWithDefaultDataStore
 	 */
 	private readonly provideEntryPoint: (runtime: IContainerRuntime) => Promise<FluidObject>;
 
+	/**
+	 * TODO: TSDoc
+	 */
+	private readonly minVersionForCollab: MinimumVersionForCollab | undefined;
+
 	public constructor(props: ContainerRuntimeFactoryWithDefaultDataStoreProps) {
 		super();
 
@@ -135,6 +146,7 @@ export class ContainerRuntimeFactoryWithDefaultDataStore
 		this.provideEntryPoint = props.provideEntryPoint ?? getDefaultFluidObject;
 		this.requestHandlers = [getDefaultObject];
 		this.registry = new FluidDataStoreRegistry(this.registryEntries);
+		this.minVersionForCollab = props.minVersionForCollab;
 	}
 
 	public async instantiateFirstTime(runtime: IContainerRuntime): Promise<void> {
@@ -159,6 +171,7 @@ export class ContainerRuntimeFactoryWithDefaultDataStore
 			// eslint-disable-next-line import/no-deprecated
 			requestHandler: buildRuntimeRequestHandler(...this.requestHandlers),
 			provideEntryPoint: this.provideEntryPoint,
+			minVersionForCollab: this.minVersionForCollab,
 		});
 	}
 
