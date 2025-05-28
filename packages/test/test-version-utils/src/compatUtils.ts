@@ -364,7 +364,7 @@ export async function getCompatVersionedTestObjectProviderFromApis(
 				containerOptions?.runtimeOptions,
 				driverConfig.type,
 			),
-			containerOptions?.minVersionForCollab,
+			apis.containerRuntime.version as unknown as /* MinimumVersionForCollab */ any,
 			[innerRequestHandler],
 		);
 	};
@@ -389,7 +389,7 @@ export async function getCompatVersionedTestObjectProviderFromApis(
 				containerOptions?.runtimeOptions,
 				driverConfig.type,
 			),
-			containerOptions?.minVersionForCollab,
+			apis.containerRuntime.version as unknown as /* MinimumVersionForCollab */ any,
 			[innerRequestHandler],
 		);
 	};
