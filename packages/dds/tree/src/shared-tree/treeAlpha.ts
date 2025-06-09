@@ -39,9 +39,10 @@ import {
 	treeNodeApi,
 	getIdentifierFromNode,
 	mapTreeFromNodeData,
+	getOrCreateNodeFromInnerNode,
 } from "../simple-tree/index.js";
 import { extractFromOpaque, type JsonCompatible } from "../util/index.js";
-import { noopValidator, type FluidClientVersion, type ICodecOptions } from "../codec/index.js";
+import type { CodecWriteOptions, ICodecOptions } from "../codec/index.js";
 import type { ITreeCursorSynchronous } from "../core/index.js";
 import {
 	cursorForMapTreeField,
@@ -57,8 +58,7 @@ import {
 } from "../feature-libraries/index.js";
 import { independentInitializedView, type ViewContent } from "./independentView.js";
 import { SchematizingSimpleTreeView, ViewSlot } from "./schematizingTreeView.js";
-import { currentVersion } from "../codec/index.js";
-import { createFromMapTree } from "../simple-tree/index.js";
+import { currentVersion, noopValidator } from "../codec/index.js";
 
 const identifier: TreeIdentifierUtils = (node: TreeNode): string | undefined => {
 	const nodeIdentifier = getIdentifierFromNode(node, "uncompressed");
@@ -295,7 +295,10 @@ export interface TreeAlpha {
 	 */
 	exportCompressed(
 		tree: TreeNode | TreeLeafValue,
-		options: { oldestCompatibleClient: FluidClientVersion; idCompressor?: IIdCompressor },
+		options: { idCompressor?: IIdCompressor } & Pick<
+			CodecWriteOptions,
+			"oldestCompatibleClient"
+		>,
 	): JsonCompatible<IFluidHandle>;
 
 	/**
@@ -368,7 +371,7 @@ export const TreeAlpha: TreeAlpha = {
 			: TreeNode | TreeLeafValue | undefined
 	> {
 		const mapTree = mapTreeFromNodeData(data as InsertableField<UnsafeUnknownSchema>, schema);
-		const result = mapTree === undefined ? undefined : createFromMapTree(schema, mapTree);
+		const result = mapTree === undefined ? undefined : getOrCreateNodeFromInnerNode(mapTree);
 		return result as Unhydrated<
 			TSchema extends ImplicitFieldSchema
 				? TreeFieldFromImplicitField<TSchema>
@@ -426,10 +429,10 @@ export const TreeAlpha: TreeAlpha = {
 
 	exportCompressed(
 		node: TreeNode | TreeLeafValue,
-		options: {
-			oldestCompatibleClient: FluidClientVersion;
-			idCompressor?: IIdCompressor;
-		},
+		options: { idCompressor?: IIdCompressor } & Pick<
+			CodecWriteOptions,
+			"oldestCompatibleClient"
+		>,
 	): JsonCompatible<IFluidHandle> {
 		const schema = tryGetSchema(node) ?? fail(0xacf /* invalid input */);
 		const format = fluidVersionToFieldBatchCodecWriteVersion(options.oldestCompatibleClient);

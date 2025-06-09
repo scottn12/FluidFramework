@@ -5,7 +5,6 @@
 
 import {
 	type AnchorNode,
-	type ExclusiveMapTree,
 	type FieldKey,
 	type FieldKindIdentifier,
 	type ITreeCursorSynchronous,
@@ -20,6 +19,7 @@ import type {
 	ValueFieldEditBuilder,
 	OptionalFieldEditBuilder,
 } from "../default-schema/index.js";
+import type { MinimalMapTreeNodeView } from "../mapTreeCursor.js";
 import type { FlexFieldKind } from "../modular-schema/index.js";
 
 import type { FlexTreeContext } from "./context.js";
@@ -98,6 +98,10 @@ export enum TreeStatus {
 	 * Nodes can enter this state for multiple reasons:
 	 * - The node was removed and nothing (e.g. undo/redo history) kept it from being cleaned up.
 	 * - The {@link TreeView} was disposed or had a schema change which made the tree incompatible.
+	 *
+	 * Deleted nodes' contents should not be observed or edited. This includes functionality exposed via {@link (Tree:variable)},
+	 * with the exception of {@link TreeNodeApi.status}.
+	 *
 	 * @privateRemarks
 	 * There was planned work (AB#17948) to make the first reason a node could become "Deleted" impossible,
 	 * at least as an opt in feature,
@@ -278,12 +282,12 @@ export interface FlexTreeField extends FlexTreeEntity {
 /**
  * Typed tree for inserting as the content of a field.
  */
-export type FlexibleFieldContent = ExclusiveMapTree[];
+export type FlexibleFieldContent = readonly FlexibleNodeContent[];
 
 /**
  * Tree for inserting as a node.
  */
-export type FlexibleNodeContent = ExclusiveMapTree;
+export type FlexibleNodeContent = MinimalMapTreeNodeView;
 
 /**
  * {@link FlexTreeField} that stores a sequence of children.
