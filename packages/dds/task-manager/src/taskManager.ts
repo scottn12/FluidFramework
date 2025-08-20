@@ -51,6 +51,17 @@ interface IPendingOp {
 	messageId: number;
 }
 
+function isTaskManagerOperation(op: unknown): op is ITaskManagerOperation {
+	return (
+		typeof op === "object" &&
+		op !== null &&
+		"taskId" in op &&
+		typeof op.taskId === "string" &&
+		"type" in op &&
+		(op.type === "volunteer" || op.type === "abandon" || op.type === "complete")
+	);
+}
+
 const snapshotFileName = "header";
 
 /**
@@ -84,6 +95,8 @@ export class TaskManagerClass
 	private readonly connectionWatcher: EventEmitter = new EventEmitter();
 	// completedWatcher emits an event whenever the local client receives a completed op.
 	private readonly completedWatcher: EventEmitter = new EventEmitter();
+	// rollbackWatcher emits an event whenever a pending op is rolled back.
+	private readonly rollbackWatcher: EventEmitter = new EventEmitter();
 
 	private messageId: number = -1;
 	/**
@@ -319,6 +332,21 @@ export class TaskManagerClass
 
 		// This promise works even if we already have an outstanding volunteer op.
 		const lockAcquireP = new Promise<boolean>((resolve, reject) => {
+			const setupListeners = (): void => {
+				this.queueWatcher.on("queueChange", checkIfAcquiredLock);
+				this.abandonWatcher.on("abandon", checkIfAbandoned);
+				this.connectionWatcher.on("disconnect", rejectOnDisconnect);
+				this.completedWatcher.on("completed", checkIfCompleted);
+				this.rollbackWatcher.on("rollback", checkIfRolledBack);
+			};
+
+			const removeListeners = (): void => {
+				this.queueWatcher.off("queueChange", checkIfAcquiredLock);
+				this.abandonWatcher.off("abandon", checkIfAbandoned);
+				this.connectionWatcher.off("disconnect", rejectOnDisconnect);
+				this.completedWatcher.off("completed", checkIfCompleted);
+				this.rollbackWatcher.off("rollback", checkIfRolledBack);
+			};
 			const checkIfAcquiredLock = (eventTaskId: string): void => {
 				if (eventTaskId !== taskId) {
 					return;
@@ -328,10 +356,7 @@ export class TaskManagerClass
 				// lock attempt, but have an outstanding abandon AND the outstanding volunteer for this lock attempt.
 				// If we reach the head of the queue based on the previous lock attempt, we don't want to resolve.
 				if (this.assigned(taskId) && !this.latestPendingOps.has(taskId)) {
-					this.queueWatcher.off("queueChange", checkIfAcquiredLock);
-					this.abandonWatcher.off("abandon", checkIfAbandoned);
-					this.connectionWatcher.off("disconnect", rejectOnDisconnect);
-					this.completedWatcher.off("completed", checkIfCompleted);
+					removeListeners();
 					resolve(true);
 				}
 			};
@@ -341,18 +366,12 @@ export class TaskManagerClass
 					return;
 				}
 
-				this.queueWatcher.off("queueChange", checkIfAcquiredLock);
-				this.abandonWatcher.off("abandon", checkIfAbandoned);
-				this.connectionWatcher.off("disconnect", rejectOnDisconnect);
-				this.completedWatcher.off("completed", checkIfCompleted);
+				removeListeners();
 				reject(new Error("Abandoned before acquiring task assignment"));
 			};
 
 			const rejectOnDisconnect = (): void => {
-				this.queueWatcher.off("queueChange", checkIfAcquiredLock);
-				this.abandonWatcher.off("abandon", checkIfAbandoned);
-				this.connectionWatcher.off("disconnect", rejectOnDisconnect);
-				this.completedWatcher.off("completed", checkIfCompleted);
+				removeListeners();
 				reject(new Error("Disconnected before acquiring task assignment"));
 			};
 
@@ -361,17 +380,20 @@ export class TaskManagerClass
 					return;
 				}
 
-				this.queueWatcher.off("queueChange", checkIfAcquiredLock);
-				this.abandonWatcher.off("abandon", checkIfAbandoned);
-				this.connectionWatcher.off("disconnect", rejectOnDisconnect);
-				this.completedWatcher.off("completed", checkIfCompleted);
+				removeListeners();
 				resolve(false);
 			};
 
-			this.queueWatcher.on("queueChange", checkIfAcquiredLock);
-			this.abandonWatcher.on("abandon", checkIfAbandoned);
-			this.connectionWatcher.on("disconnect", rejectOnDisconnect);
-			this.completedWatcher.on("completed", checkIfCompleted);
+			const checkIfRolledBack = (eventTaskId: string): void => {
+				if (eventTaskId !== taskId) {
+					return;
+				}
+
+				removeListeners();
+				resolve(false);
+			};
+
+			setupListeners();
 		});
 
 		if (!this.queued(taskId)) {
@@ -401,16 +423,27 @@ export class TaskManagerClass
 			this.connectionWatcher.once("connect", submitVolunteerOp);
 		};
 
+		const setupListeners = (): void => {
+			this.abandonWatcher.on("abandon", checkIfAbandoned);
+			this.connectionWatcher.on("disconnect", disconnectHandler);
+			this.completedWatcher.on("completed", checkIfCompleted);
+			this.rollbackWatcher.on("rollback", checkIfRolledBack);
+		};
+
+		const removeListeners = (): void => {
+			this.abandonWatcher.off("abandon", checkIfAbandoned);
+			this.connectionWatcher.off("disconnect", disconnectHandler);
+			this.connectionWatcher.off("connect", submitVolunteerOp);
+			this.completedWatcher.off("completed", checkIfCompleted);
+			this.rollbackWatcher.off("rollback", checkIfRolledBack);
+		};
+
 		const checkIfAbandoned = (eventTaskId: string): void => {
 			if (eventTaskId !== taskId) {
 				return;
 			}
 
-			this.abandonWatcher.off("abandon", checkIfAbandoned);
-			this.connectionWatcher.off("disconnect", disconnectHandler);
-			this.connectionWatcher.off("connect", submitVolunteerOp);
-			this.completedWatcher.off("completed", checkIfCompleted);
-
+			removeListeners();
 			this.subscribedTasks.delete(taskId);
 		};
 
@@ -419,17 +452,20 @@ export class TaskManagerClass
 				return;
 			}
 
-			this.abandonWatcher.off("abandon", checkIfAbandoned);
-			this.connectionWatcher.off("disconnect", disconnectHandler);
-			this.connectionWatcher.off("connect", submitVolunteerOp);
-			this.completedWatcher.off("completed", checkIfCompleted);
-
+			removeListeners();
 			this.subscribedTasks.delete(taskId);
 		};
 
-		this.abandonWatcher.on("abandon", checkIfAbandoned);
-		this.connectionWatcher.on("disconnect", disconnectHandler);
-		this.completedWatcher.on("completed", checkIfCompleted);
+		const checkIfRolledBack = (eventTaskId: string): void => {
+			if (eventTaskId !== taskId) {
+				return;
+			}
+
+			removeListeners();
+			this.subscribedTasks.delete(taskId);
+		};
+
+		setupListeners();
 
 		if (!this.isAttached()) {
 			// Simulate auto-ack in detached scenario
@@ -546,6 +582,7 @@ export class TaskManagerClass
 			this.submitCompleteOp(taskId);
 		}
 
+		// TODO: Shouldn't we not do this if we are attached? Since we don't have ack yet
 		this.taskQueues.delete(taskId);
 		this.completedWatcher.emit("completed", taskId);
 		this.emit("completed", taskId);
@@ -777,5 +814,20 @@ export class TaskManagerClass
 				unreachableCase(taskOp);
 			}
 		}
+	}
+
+	/**
+	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.rollback}
+	 */
+	protected rollback(content: unknown, localOpMetadata: unknown): void {
+		assert(typeof localOpMetadata === "number", "Expect localOpMetadata to be a number");
+		assert(isTaskManagerOperation(content), "unexpected op content");
+		const pendingOpToRollback = this.latestPendingOps.get(content.taskId);
+		assert(
+			pendingOpToRollback !== undefined && pendingOpToRollback.messageId === localOpMetadata,
+			"pending op mismatch",
+		);
+		this.latestPendingOps.delete(content.taskId);
+		this.rollbackWatcher.emit("rollback", content.taskId);
 	}
 }
