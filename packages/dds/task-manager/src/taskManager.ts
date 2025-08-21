@@ -51,6 +51,17 @@ interface IPendingOp {
 	messageId: number;
 }
 
+function isTaskManagerOperation(op: unknown): op is ITaskManagerOperation {
+	return (
+		typeof op === "object" &&
+		op !== null &&
+		"taskId" in op &&
+		typeof op.taskId === "string" &&
+		"type" in op &&
+		(op.type === "volunteer" || op.type === "abandon" || op.type === "complete")
+	);
+}
+
 const snapshotFileName = "header";
 
 /**
@@ -84,6 +95,8 @@ export class TaskManagerClass
 	private readonly connectionWatcher: EventEmitter = new EventEmitter();
 	// completedWatcher emits an event whenever the local client receives a completed op.
 	private readonly completedWatcher: EventEmitter = new EventEmitter();
+	// rollbackWatcher emits an event whenever a pending op is rolled back.
+	private readonly rollbackWatcher: EventEmitter = new EventEmitter();
 
 	private messageId: number = -1;
 	/**
@@ -304,12 +317,14 @@ export class TaskManagerClass
 				this.abandonWatcher.on("abandon", checkIfAbandoned);
 				this.connectionWatcher.on("disconnect", rejectOnDisconnect);
 				this.completedWatcher.on("completed", checkIfCompleted);
+				this.rollbackWatcher.on("rollback", checkIfRolledBack);
 			};
 			const removeListeners = (): void => {
 				this.queueWatcher.off("queueChange", checkIfAcquiredLock);
 				this.abandonWatcher.off("abandon", checkIfAbandoned);
 				this.connectionWatcher.off("disconnect", rejectOnDisconnect);
 				this.completedWatcher.off("completed", checkIfCompleted);
+				this.rollbackWatcher.off("rollback", checkIfRolledBack);
 			};
 
 			const checkIfAcquiredLock = (eventTaskId: string): void => {
@@ -346,6 +361,15 @@ export class TaskManagerClass
 				resolve(false);
 			};
 
+			const checkIfRolledBack = (eventTaskId: string): void => {
+				if (eventTaskId !== taskId) {
+					return;
+				}
+
+				removeListeners();
+				resolve(false);
+			};
+
 			setupListeners();
 		});
 
@@ -376,12 +400,14 @@ export class TaskManagerClass
 			this.abandonWatcher.on("abandon", checkIfAbandoned);
 			this.connectionWatcher.on("disconnect", disconnectHandler);
 			this.completedWatcher.on("completed", checkIfCompleted);
+			this.rollbackWatcher.on("rollback", checkIfRolledBack);
 		};
 		const removeListeners = (): void => {
 			this.abandonWatcher.off("abandon", checkIfAbandoned);
 			this.connectionWatcher.off("disconnect", disconnectHandler);
 			this.connectionWatcher.off("connect", submitVolunteerOp);
 			this.completedWatcher.off("completed", checkIfCompleted);
+			this.rollbackWatcher.off("rollback", checkIfRolledBack);
 		};
 
 		const disconnectHandler = (): void => {
@@ -401,6 +427,15 @@ export class TaskManagerClass
 			if (eventTaskId !== taskId) {
 				return;
 			}
+			removeListeners();
+			this.subscribedTasks.delete(taskId);
+		};
+
+		const checkIfRolledBack = (eventTaskId: string): void => {
+			if (eventTaskId !== taskId) {
+				return;
+			}
+
 			removeListeners();
 			this.subscribedTasks.delete(taskId);
 		};
@@ -776,5 +811,24 @@ export class TaskManagerClass
 				unreachableCase(taskOp);
 			}
 		}
+	}
+
+	/**
+	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.rollback}
+	 */
+	protected rollback(content: unknown, localOpMetadata: unknown): void {
+		assert(typeof localOpMetadata === "number", "Expect localOpMetadata to be a number");
+		assert(isTaskManagerOperation(content), "unexpected op content");
+		const pendingOpToRollback = this.latestPendingOps.get(content.taskId);
+		assert(
+			pendingOpToRollback !== undefined && pendingOpToRollback.messageId === localOpMetadata,
+			"rollback/pending op mismatch",
+		);
+		// Since TaskManager is a consensus based DDS we haven't applied it to the local state and
+		// the op will not be processed. So all we need to do is delete the tracking of the rolled
+		// back pending op and emit a rollback event so the affected promises/subscriptions are
+		// resolved.
+		this.latestPendingOps.delete(content.taskId);
+		this.rollbackWatcher.emit("rollback", content.taskId);
 	}
 }
