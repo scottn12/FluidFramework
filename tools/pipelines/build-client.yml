@@ -101,6 +101,17 @@ schedules:
     - lts
   always: true
 
+variables:
+  # We use 'chalk' to colorize output, which auto-detects color support in the
+  # running terminal.  The log output shown in Azure DevOps job runs only has
+  # basic ANSI color support though, so force that in the pipeline
+  - name: FORCE_COLOR
+    value: 1
+  - template: include-vars.yml
+    parameters:
+      publishOverride: '${{ parameters.publishOverride }}'
+      releaseBuildOverride: '${{ parameters.releaseBuildOverride }}'
+
 extends:
   template: templates/build-npm-package.yml@self
   parameters:
@@ -116,3 +127,4 @@ extends:
     cgSubDirectory: packages
     checkoutSubmodules: true
     taskBundleAnalysis: true
+    shouldShip: ${{ or(eq(variables['release'], 'release'), eq(variables['release'], 'prerelease')) }}
