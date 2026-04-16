@@ -1,8 +1,5 @@
 # Fluid Framework Cross-Client Compatibility
 
-> [!IMPORTANT]
-> This document reflects a policy that is still under active development. Details are subject to change.
-
 **Suggested pre-read:** The [Fluid Framework Compatibility Considerations](./FluidCompatibilityConsiderations.md) document provides an overview of Fluid's four compatibility dimensions: API compatibility, Layer compatibility, Cross-client compatibility, and Data-at-rest compatibility. This document focuses specifically on Cross-client compatibility — how clients running different versions of Fluid can collaborate on the same document.
 
 ## Overview
@@ -31,25 +28,29 @@ This document explains:
 
 | Term | Definition |
 |------|------------|
-| **N** | The most recent public major release of the Fluid Framework |
-| **N-1** | The second most recent public major release |
-| **N-2** | The third most recent public major release |
+| **Compatibility Checkpoint** | A Fluid release that marks a compatibility boundary. Checkpoints are published on a regular cadence and documented in [TODO](TODO). The set of supported checkpoint releases defines the cross-client compatibility window. |
+| **Checkpoint N** | The most recent compatibility checkpoint release |
+| **Checkpoint N-1** | The second most recent compatibility checkpoint release |
+| **Checkpoint N-2** | The third most recent compatibility checkpoint release |
 | **Saturation** | When an adequate percentage of an application's clients are running a certain version. The threshold that is considered adequate is defined by the application's requirements.  |
-
-> **Note:** When referring to previous major releases (e.g., N-1), we assume the latest minor release within that major version series. All minor releases within a given major version are compatible with each other. However, please note this is currently TBD and is likely subject to change.
 
 ## Cross-Client Compatibility Policy
 
-The Fluid Framework guarantees cross-client compatibility between adjacent major versions. This policy ensures that applications have sufficient time to upgrade while maintaining seamless collaboration.
-
-| Version Combination | Compatibility |
-|---------------------|---------------|
-| **N / N-1** (adjacent major versions) | ✅ Fully compatible. No special action required. |
-| **N / N-2 or older** | ❌ Not supported. These clients cannot collaborate. |
+The Fluid Framework guarantees cross-client compatibility within an **18-month window**, enforced through
+designated **compatibility checkpoints**. Checkpoints are published on a **6-month cadence** and identified
+in the [TODO](TODO). Any two clients are compatible as long as their checkpoint releases are within 18 months of each
+other (up to 3 checkpoints apart).
 
 **Enforcement:** Incompatible clients will be blocked from collaborating on a document and shown a clear error message (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor)).
 
-**Example:** If the most recent public major release (N) is 4.0, a client running 4.x is cross-client compatible with 3.x clients, but not with 2.x or older clients.
+### Examples
+
+| Version Combination | Time Between Checkpoints | Compatibility |
+|---------------------|--------------------------|---------------|
+| **Checkpoint N / Checkpoint N-1** | ~6 months | ✅ Compatible |
+| **Checkpoint N / Checkpoint N-2** | ~12 months | ✅ Compatible |
+| **Checkpoint N / Checkpoint N-3** | ~18 months | ✅ Compatible |
+| **Checkpoint N / Checkpoint N-4 or older** | >18 months | ❌ Not supported |
 
 ## Cross-client Compatibility Configuration and Enforcement
 
@@ -119,7 +120,7 @@ You may also set individual runtime options via `IContainerRuntimeOptions`, but 
 
 If `minVersionForCollab` is not explicitly set, a conservative default is used (see `defaultMinVersionForCollab` in [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)).
 
-We recommend maintaining `minVersionForCollab` at the latest version of Fluid that your users are [saturated](#terminology) on. This will ensure:
+We recommend maintaining `minVersionForCollab` at the latest release that your users are [saturated](#terminology) on which falls within the same supported compatibility checkpoint window as the version you intend to upgrade to. This will ensure:
 1. Older and newer clients can collaborate with each other safely.
 2. Your application can leverage new Fluid features as soon as they become safe for cross-client collaboration.
 
@@ -129,9 +130,10 @@ We recommend following the below pattern to ensure cross-client compatibility. W
 
 1. Observe the distribution of Fluid versions across your application's clients. See [Observing Client Version Distribution](./FluidCompatibilityConsiderations.md#observing-client-version-distribution) for how to do this using telemetry.
 2. Update your compatibility configuration to match the lowest deployed version that your clients are [saturated](#terminology) on:
-   - **Declarative model**: Set `CompatibilityMode` to the appropriate mode for that major version (e.g., `"2"` once clients are saturated on 2.x).
+   - **Declarative model**: Set `CompatibilityMode` once clients are saturated on a Fluid release that
+     falls within the same supported compatibility checkpoint window as the version you intend to upgrade to.
    - **Encapsulated model**: Set `minVersionForCollab` to the specific saturated version (e.g., `"2.10.0"`).
-3. Verify that the configured compatibility is within the cross-client compatibility window of the Fluid version you want to upgrade to. If it is, bump your Fluid dependencies and no further action is required. If not, wait for further saturation and return to step 1.
+3. Verify that the configured compatibility checkpoint is within the supported compatibility window of the Fluid version you want to upgrade to. If it is, bump your Fluid dependencies and no further action is required. If not, wait for further saturation and return to step 1.
 4. Monitor telemetry for warnings/errors to ensure safe rollout (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor) below). At this point any clients that are not saturated may be blocked from accessing the document.
 
 #### Errors and Warnings to Monitor

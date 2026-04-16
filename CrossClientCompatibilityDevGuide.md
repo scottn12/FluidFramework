@@ -1,8 +1,5 @@
 # Fluid Framework Cross-Client Compatibility Developer Guide
 
-> [!IMPORTANT]
-> This document reflects a policy that is still under active development. Details are subject to change.
-
 ## Overview
 
 This document describes the mechanics and internals of [Fluid Framework Cross-Client Compatibility](./CrossClientCompatibility.md) for **Fluid Framework contributors** — developers who maintain or extend the framework.
@@ -14,15 +11,18 @@ This guide covers:
 - **Identifying Breaking Changes** - How to determine if a change affects cross-client compatibility
 - **Enforcing the Policy** - How `minVersionForCollab`, default configurations, and unsafe configuration prevention work together
 - **Safely Staging Breaking Changes** - Step-by-step process for shipping data-format changes
+- **Cleaning Up Old Feature Gates** - When and how to remove feature gates that have aged out of the compatibility window
 - **Testing** - How to validate cross-client compatibility using the e2e test infrastructure
 
 ### Terminology
 
+See the [Cross-Client Compatibility Policy](./CrossClientCompatibility.md#terminology)
+for full terminology definitions. Key terms used in this guide:
+
 | Term | Definition |
 |------|------------|
-| **N** | The most recent public major release of the Fluid Framework |
-| **N-1** | The second most recent public major release |
-| **N-2** | The third most recent public major release |
+| **Compatibility Checkpoint** | A Fluid release that marks a compatibility boundary. Published on a regular cadence. |
+| **Compatibility Window** | The set of checkpoints guaranteed to be cross-client compatible (currently 18 months / 3 checkpoints). |
 
 ## Identifying Cross-Client Compatibility Breaking Changes
 
@@ -125,16 +125,69 @@ In [containerCompatibility.ts](./packages/runtime/container-runtime/src/containe
 
 ### 4. File an ADO item to remove the container runtime option
 
-Since the policy's maximum compatibility promise is N/N-1, we will eventually not require a mechanism to disable certain features. However, some features (e.g., `enableRuntimeIdCompressor`) may never be enabled by default — in those cases, the enable/disable mechanism is kept indefinitely. Other features (e.g., `enableGroupedBatching`) are intended to eventually be a non-optional part of Fluid. If your change is the latter, file an ADO item to eventually remove the container runtime option entirely. This should be an ADO item because:
+Because the compatibility window is time-bounded (currently 18 months), feature gates
+will eventually age out of the window and can be removed. However, some features
+(e.g., `enableRuntimeIdCompressor`) may never be enabled by default — in those cases,
+the enable/disable mechanism is kept indefinitely. Other features
+(e.g., `enableGroupedBatching`) are intended to eventually be a non-optional part of
+Fluid. If your change is the latter, file an ADO item to eventually remove the
+container runtime option entirely. See
+[Cleaning Up Old Feature Gates](#cleaning-up-old-feature-gates) for when and how
+removal becomes possible.
 
-- It will likely be years before the policy allows removal of the mechanism.
-- There is not currently a strong process/timeline for when this will be ready. More information will be added in the future when appropriate.
+## Cleaning Up Old Feature Gates
+
+Once a feature gate's minimum version threshold falls entirely outside the
+compatibility window (i.e., all supported checkpoints are newer than the version
+at which the feature was introduced), the gate can be removed and the feature can
+become an unconditional part of Fluid.
+
+### When can a feature gate be removed?
+
+A feature gate can be removed when **all** of the following are true:
+
+1. The feature's version threshold in `runtimeOptionsAffectingDocSchemaConfigMap`
+   is older than the oldest supported compatibility checkpoint.
+2. No supported checkpoint release needs the ability to disable the feature.
+3. The corresponding ADO work item (filed in
+   [Step 4](#4-file-an-ado-item-to-remove-the-container-runtime-option)) has been
+   approved for cleanup.
+
+**Example:** Suppose `enableGroupedBatching` has a version threshold of `"2.0.0"`.
+Once the oldest supported checkpoint is newer than `"2.0.0"` (meaning all clients
+within the compatibility window understand grouped batching), the feature gate can
+be removed.
+
+### How to remove a feature gate
+
+1. Remove the container runtime option from `ContainerRuntimeOptionsInternal`.
+2. Remove the corresponding entries from `runtimeOptionsAffectingDocSchemaConfigMap`
+   and `runtimeOptionsAffectingDocSchemaConfigValidationMap` in
+   [containerCompatibility.ts](./packages/runtime/container-runtime/src/containerCompatibility.ts).
+3. Remove the property from `IDocumentSchemaFeatures` in
+   [documentSchema.ts](./packages/runtime/container-runtime/src/summary/documentSchema.ts)
+   and update `documentSchemaSupportedConfigs` accordingly.
+4. Hard-code the previously gated behavior as the unconditional default.
+5. Update or remove any e2e tests that were specifically testing the
+   enable/disable toggle for this feature.
+6. Close the corresponding ADO work item.
+
+> **Note:** Features that are intentionally opt-in (e.g., `enableRuntimeIdCompressor`)
+> should **not** be cleaned up — their gates are permanent.
 
 ## Testing
 
-Fluid's end-to-end test suite automatically generates cross-client compatibility variations using `describeCompat()` with `"FullCompat"`. The variations test cross-client compatibility scenarios by using one version of the Fluid runtime for creating containers and a different version for loading containers.
+Fluid's end-to-end test suite automatically generates cross-client compatibility
+variations using `describeCompat()` with `"FullCompat"`. The variations test
+cross-client compatibility scenarios by using one version of the Fluid runtime for
+creating containers and a different version for loading containers.
 
-**Example:** A test may generate the following variations for cross-client compatibility scenarios:
+**Example:** A test may generate the following variations for cross-client
+compatibility scenarios:
+
+> **Note:** The version labels below (e.g., "N-1 fast train") reflect the current
+> test infrastructure naming. These labels will be updated to reflect
+> checkpoint-based versioning as part of the checkpoint adoption work.
 
 ```
 compat cross-client - create with 2.43.0 (N) + load with 2.33.2 (N-1 fast train)

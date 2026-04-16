@@ -89,7 +89,16 @@ This diagram shows different Fluid layers with different versions in a client:
 
 ## Cross-client compatibility
 
-Cross-client compatibility implies that clients within a supported set of versions should be able to fully collaborate with each other. For example: say we support N / N-1 for cross-client compatibility. This means that there could be clients running runtime versions N and N-1 in the same collaboration session and they should be able to successfully read incoming changes while writing their own with confidence. What makes this different from data-at-rest compatibility promise is that lower-version clients can read content written by a higher-version collaborator, not just the other way around.
+Cross-client compatibility guarantees that clients within a supported set of versions
+should be able to fully collaborate with each other. For example: Fluid supports
+cross-client compatibility within an 18-month window enforced through designated
+compatibility checkpoints (see the
+[Cross-Client Compatibility Policy](./CrossClientCompatibility.md#cross-client-compatibility-policy)
+for details). This means that clients running versions of Fluid within this window
+can participate in the same collaboration session and successfully read incoming
+changes while writing their own with confidence. What makes this different from the
+data-at-rest compatibility promise is that lower-version clients can read content
+written by a higher-version collaborator, not just the other way around.
 
 ### Motivation
 
