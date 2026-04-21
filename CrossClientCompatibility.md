@@ -39,7 +39,7 @@ This document explains:
 The Fluid Framework guarantees cross-client compatibility within an **18-month window**, enforced through
 designated **compatibility checkpoints**. Checkpoints are published on a **6-month cadence** and identified
 in the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page. Any two clients are compatible
-as long as their checkpoint releases are within 18 months of each other (up to 3 checkpoints apart).
+as long as their checkpoint releases are within ~18 months of each other (spanning Checkpoint N through Checkpoint N-3).
 
 **Enforcement:** Incompatible clients will be blocked from collaborating on a document and shown a clear error message (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor)).
 
