@@ -41,3 +41,13 @@ checkpoints are designated.
 > 2. Dates and version ranges for future checkpoints are estimates and are
 >    subject to change. Exact release versions and dates will be added as each
 >    checkpoint is designated.
+
+## Automation
+
+New checkpoints can be designated using the `flub designate-checkpoint` command:
+
+```sh
+flub designate-checkpoint --name CC-8 --version 2.260.0 --date 2028-08-28
+```
+
+This command updates the checkpoint table above and prints guidance for additional manual updates needed across the codebase.
