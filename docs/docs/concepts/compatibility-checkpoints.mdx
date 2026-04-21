@@ -1,0 +1,36 @@
+---
+title: Compatibility Checkpoints
+sidebar_position: 5
+description: Designated checkpoint releases that define the Fluid Framework cross-client compatibility window.
+---
+
+# Compatibility Checkpoints
+
+Compatibility checkpoints are designated Fluid Framework releases that mark cross-client compatibility boundaries. They define which versions of Fluid can safely collaborate on the same document.
+
+## Schedule
+
+Checkpoints are designated on a **6-month cadence**. Any two clients whose checkpoint
+releases are within **~18 months** of each other (spanning Checkpoint N through
+Checkpoint N-3) are guaranteed to be cross-client compatible.
+
+## Checkpoints
+
+| Checkpoint | Release | Date | Compatible With |
+|------------|---------|------|-----------------|
+| CC-1 | 2.100.0 | 2026-04-27 | CC-1, all prior releases >= 2.0.0* |
+
+> **\*Note:** Since `CC-1` is the first designated checkpoint, it is
+> compatible with all prior Fluid releases >= 2.0.0. Future checkpoints will define
+> compatibility relative to other checkpoints within the 18-month window.
+
+## Learn More
+
+- [Cross-Client Compatibility Policy](https://github.com/microsoft/FluidFramework/blob/main/CrossClientCompatibility.md) — Full policy documentation
+- [Compatibility Checkpoints (source)](https://github.com/microsoft/FluidFramework/blob/main/CompatibilityCheckpoints.md) — Authoritative checkpoint list maintained in the repository
+
+:::note
+The authoritative list of compatibility checkpoints is maintained in the repository root at
+[`CompatibilityCheckpoints.md`](https://github.com/microsoft/FluidFramework/blob/main/CompatibilityCheckpoints.md).
+This page may lag behind the source; always check the repository for the latest information.
+:::
