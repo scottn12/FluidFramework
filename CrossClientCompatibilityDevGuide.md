@@ -22,7 +22,7 @@ for full terminology definitions. Key terms used in this guide:
 | Term | Definition |
 |------|------------|
 | **Compatibility Checkpoint** | A Fluid release that marks a compatibility boundary. Published on a regular cadence. |
-| **Compatibility Window** | The set of checkpoints guaranteed to be cross-client compatible (currently 18 months / 3 checkpoints). |
+| **Compatibility Window** | The set of checkpoints guaranteed to be cross-client compatible (currently ~18 months, spanning Checkpoint N through Checkpoint N-3). |
 
 ## Identifying Cross-Client Compatibility Breaking Changes
 
@@ -160,8 +160,8 @@ A feature gate can be removed when **all** of the following are true:
    approved for cleanup.
 
 **Example:** Suppose option `enableFoo` has a version threshold of
-`"2.50.0"` all clients within the compatibility window understand the feature, and
-the gate can be removed.
+`"2.50.0"`. Then all clients within the compatibility window understand the
+feature, and the gate can be removed.
 
 ### How to remove a feature gate
 
