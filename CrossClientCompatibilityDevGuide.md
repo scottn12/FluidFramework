@@ -142,21 +142,26 @@ compatibility window (i.e., all supported checkpoints are newer than the version
 at which the feature was introduced), the gate can be removed and the feature can
 become an unconditional part of Fluid.
 
+The list of currently supported checkpoints is maintained on the
+[Compatibility Checkpoints](./CompatibilityCheckpoints.md) page. Use that page to
+determine the oldest supported checkpoint when evaluating whether a gate can be
+removed.
+
 ### When can a feature gate be removed?
 
 A feature gate can be removed when **all** of the following are true:
 
 1. The feature's version threshold in `runtimeOptionsAffectingDocSchemaConfigMap`
-   is older than the oldest supported compatibility checkpoint.
+   is older than the oldest supported compatibility checkpoint (see the
+   [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page).
 2. No supported checkpoint release needs the ability to disable the feature.
 3. The corresponding ADO work item (filed in
    [Step 4](#4-file-an-ado-item-to-remove-the-container-runtime-option)) has been
    approved for cleanup.
 
-**Example:** Suppose `enableGroupedBatching` has a version threshold of `"2.0.0"`.
-Once the oldest supported checkpoint is newer than `"2.0.0"` (meaning all clients
-within the compatibility window understand grouped batching), the feature gate can
-be removed.
+**Example:** Suppose option `enableFoo` has a version threshold of
+`"2.50.0"` all clients within the compatibility window understand the feature, and
+the gate can be removed.
 
 ### How to remove a feature gate
 
