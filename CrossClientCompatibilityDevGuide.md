@@ -162,7 +162,7 @@ A feature gate can be removed when **all** of the following are true:
    been approved for cleanup.
 
 **Example:** Suppose `enableFoo` has a version threshold of `"2.103.0"`
-(introduced at CC-1 = `2.103.0`), and hypothetical later checkpoints are CC-2
+(support introduced at or before CC-1 = `2.103.0`), and hypothetical later checkpoints are CC-2
 (`2.130.0`), CC-3 (`2.155.0`), CC-4 (`2.180.0`), CC-5 (`2.205.0`).
 
 - **At CC-4** the compat window is CC-1 through CC-4, so CC-1 clients are still
