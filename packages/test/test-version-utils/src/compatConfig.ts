@@ -74,12 +74,15 @@ const defaultVersionsForLayerCompat = {
 };
 
 /**
- * The default versions to be used for generating configurations for cross-client compat testing.
+ * Registry of compatibility checkpoint versions for cross-client testing.
+ * Each checkpoint is a designated release that marks a compatibility boundary.
+ * See CompatibilityCheckpoints.md for the full list and cadence.
  */
-const defaultVersionsForCrossClientCompat = {
-	// N, N-1, and N-2 for cross-client compat
-	currentVersionDeltas: [0, -1, -2],
-};
+export const compatibilityCheckpoints: { name: string; version: string }[] = [
+	{ name: "CC-1", version: "2.100.0" },
+	// Future checkpoints will be added here on the 6-month cadence.
+	// Example: { name: "CC-2", version: "2.200.0" },
+];
 
 // This indicates the number of versions above 2.0.0.internal.1.y.z that we want to support for back compat.
 // Currently we only want to support 2.0.0.internal.3.y.z. and above
@@ -314,81 +317,63 @@ function genCompatConfig(versionDetails: {
 	};
 }
 /**
- * Generates the cross-client compat config permutations.
- * This will resolve to one permutation where `CompatConfig.createVersion` is set to the current version and
- * `CompatConfig.loadVersion` is set to the delta version. Then, a second permutation where `CompatConfig.createVersion`
- * is set to the delta version and `CompatConfig.loadVersion` is set to the current version.
- * The delta versions will be:
- * - N-1 and N-2, for "fast train" customers (i.e. \>=2.10.0 \<2.20.0, \>=2.20.0 \<2.30.0, etc.)
- * - N-1 and N-2, for "slow train" customers (i.e. ^1.0.0, ^2.0.0, etc.)
+ * Generates the cross-client compat config permutations using checkpoint-based versioning.
+ * This tests:
+ * 1. The current version against each checkpoint version (bidirectional)
+ * 2. All checkpoint pairs against each other (bidirectional) for checkpoints within the 18-month window
  *
- * @remarks
- * Fast/slow trains refer to the different velocities that customers adopt new releases.
- * Fast train customers integrate most minor releases quickly and saturate on a roughly 2-month
- * cadence. This currently aligns with our regular schedule for .10 minor releases (i.e. 2.10.0,
- * 2.20.0, etc.). Note that this may change in the future, and we will have to adjust our strategy accordingly.
- * Slow train customers mainly integrate public major releases and may take much longer to saturate
- * on any given release. Ideally, the slow train releases would also be on a regular time-based cadence, but
- * public major releases are not currently on a fixed schedule. This may change in the future.
- * We want to be able to test cross-client compat for both types of customers, so we generate permutations for
- * N/N-1 and N/N-2 for both fast and slow trains.
+ * Checkpoint versions below 1.0.0 are excluded (same policy as before).
  *
  * @internal
  */
 export const genCrossClientCompatConfig = (): CompatConfig[] => {
 	const currentVersion = getRequestedVersion(pkgVersion, 0, false /* adjustMajorPublic */);
-
-	// We build a map of all the versions we want to test the current version against.
-	// The key is the version and the value is a string describing the delta from the current version.
-	// We will not add any versions below 1.0.0 (only >1.0.0 is supported by our cross-client compat policy).
-	const deltaVersions: Map<string, string> = new Map();
-
-	// N-1 and N-2 for "fast train" releases
-	defaultVersionsForCrossClientCompat.currentVersionDeltas
-		.filter((delta) => delta !== 0) // skip current build
-		.forEach((delta) => {
-			const v = getRequestedVersion(pkgVersion, delta, false /* adjustMajorPublic */);
-			if (semver.gte(v, "1.0.0")) {
-				deltaVersions.set(v, `N${delta} fast train`);
-			}
-		});
-
-	// N-1 and N-2 for "slow train" releases
-	// Note: We add these in a separate for loop to maintain the order of tests (minor, then major)
-	defaultVersionsForCrossClientCompat.currentVersionDeltas
-		.filter((delta) => delta !== 0) // skip current build
-		.forEach((delta) => {
-			const v = getRequestedVersion(pkgVersion, delta, true /* adjustMajorPublic */);
-			if (semver.gte(v, "1.0.0")) {
-				if (deltaVersions.has(v)) {
-					deltaVersions.set(v, `${deltaVersions.get(v)}/N${delta} slow train`);
-				} else {
-					deltaVersions.set(v, `N${delta} slow train`);
-				}
-			}
-		});
-
-	// Build all combos of (current version, prior version) & (prior version, current version)
 	const configs: CompatConfig[] = [];
-	for (const [v, delta] of deltaVersions) {
-		configs.push(
-			genCompatConfig({
-				createVersion: currentVersion,
-				loadVersion: v,
-				createDelta: "N",
-				loadDelta: delta,
-			}),
-		);
+
+	// Test current version against each checkpoint
+	for (const checkpoint of compatibilityCheckpoints) {
+		if (semver.gte(checkpoint.version, "1.0.0") && semver.lt(checkpoint.version, currentVersion)) {
+			configs.push(
+				genCompatConfig({
+					createVersion: currentVersion,
+					loadVersion: checkpoint.version,
+					createDelta: "N",
+					loadDelta: checkpoint.name,
+				}),
+			);
+			configs.push(
+				genCompatConfig({
+					createVersion: checkpoint.version,
+					loadVersion: currentVersion,
+					createDelta: checkpoint.name,
+					loadDelta: "N",
+				}),
+			);
+		}
 	}
-	for (const [v, delta] of deltaVersions) {
-		configs.push(
-			genCompatConfig({
-				createVersion: v,
-				loadVersion: currentVersion,
-				createDelta: delta,
-				loadDelta: "N",
-			}),
-		);
+
+	// Test checkpoint pairs against each other (all within-window combinations)
+	for (let i = 0; i < compatibilityCheckpoints.length; i++) {
+		for (let j = i + 1; j < compatibilityCheckpoints.length; j++) {
+			const cp1 = compatibilityCheckpoints[i];
+			const cp2 = compatibilityCheckpoints[j];
+			configs.push(
+				genCompatConfig({
+					createVersion: cp1.version,
+					loadVersion: cp2.version,
+					createDelta: cp1.name,
+					loadDelta: cp2.name,
+				}),
+			);
+			configs.push(
+				genCompatConfig({
+					createVersion: cp2.version,
+					loadVersion: cp1.version,
+					createDelta: cp2.name,
+					loadDelta: cp1.name,
+				}),
+			);
+		}
 	}
 
 	return configs;

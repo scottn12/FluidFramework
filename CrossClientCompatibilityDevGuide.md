@@ -230,25 +230,12 @@ variations using `describeCompat()` with `"FullCompat"`. The variations test
 cross-client compatibility scenarios by using one version of the Fluid runtime for
 creating containers and a different version for loading containers.
 
-**Example:** A test may generate the following variations for cross-client
-compatibility scenarios:
-
-> **Note:** The version labels below (e.g., "N-1 fast train") reflect the current
-> test infrastructure naming. These labels will be updated to reflect
-> checkpoint-based versioning as part of the checkpoint adoption work.
+**Example:** A test may generate the following variations for cross-client compatibility scenarios. Labels such as `CC-1` refer to designated compatibility checkpoint versions (see [CompatibilityCheckpoints.md](./CompatibilityCheckpoints.md) for the full list and cadence):
 
 ```
-compat cross-client - create with 2.43.0 (N) + load with 2.33.2 (N-1 fast train)
+compat cross-client - create with 2.110.0 (N) + load with 2.100.0 (CC-1)
   ✔ Example test
-compat cross-client - create with 2.43.0 (N) + load with 2.23.0 (N-2 fast train)
-  ✔ Example test
-compat cross-client - create with 2.43.0 (N) + load with 1.4.0 (N-1 slow train/LTS)
-  ✔ Example test
-compat cross-client - create with 2.33.2 (N-1 fast train) + load with 2.43.0 (N)
-  ✔ Example test
-compat cross-client - create with 2.23.0 (N-2 fast train) + load with 2.43.0 (N)
-  ✔ Example test
-compat cross-client - create with 1.4.0 (N-1 slow train/LTS) + load with 2.43.0 (N)
+compat cross-client - create with 2.100.0 (CC-1) + load with 2.110.0 (N)
   ✔ Example test
 ```
 
