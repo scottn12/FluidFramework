@@ -101,7 +101,7 @@ Additionally, test your changes using the e2e test infrastructure to see if they
 
 Add a mechanism to enable/disable your change:
 
-1. **Add a container runtime option** to `ContainerRuntimeOptionsInternal` in [containerRuntime.ts](./packages/runtime/container-runtime/src/containerRuntime.ts). The option should control whether your change is enabled or disabled. For example, there exists a runtime option for `createBlobPayloadPending` which determines whether to use the new or legacy behavior. New properties added to `ContainerRuntimeOptionsInternal` are automatically included in `RuntimeOptionsAffectingDocSchema` (defined in [containerCompatibility.ts](./packages/runtime/container-runtime/src/containerCompatibility.ts)) via an `Omit` pattern — this will cause a build failure until the configuration maps are updated in Step 3. If your option does **not** affect the document schema, explicitly add it to the `Omit` list in `RuntimeOptionsAffectingDocSchema`.
+1. **Add a container runtime option** to `ContainerRuntimeOptionsInternal` in [containerRuntime.ts](./packages/runtime/container-runtime/src/containerRuntime.ts). The option should control whether your change is enabled or disabled. For example, there exists a runtime option for `createBlobPayloadPending` which determines whether to use the new or legacy behavior. New properties added to `ContainerRuntimeOptionsInternal` are automatically included in `RuntimeOptionsAffectingDocSchema` (defined in [containerCompatibility.ts](./packages/runtime/container-runtime/src/containerCompatibility.ts)) via an `Omit` pattern — this will cause a build failure until the configuration maps are updated in Step 3. The document schema is the enforcement mechanism for cross-client compatibility, so any breaking change must go through it. Do **not** add your option to the `Omit` list.
 
 2. **Add a property** corresponding to the container runtime option to `IDocumentSchemaFeatures` in [documentSchema.ts](./packages/runtime/container-runtime/src/summary/documentSchema.ts).
 
@@ -115,7 +115,9 @@ Add a mechanism to enable/disable your change:
 
 In [containerCompatibility.ts](./packages/runtime/container-runtime/src/containerCompatibility.ts), there are two configuration maps that must include an entry for each new runtime option. If an entry is missing, the build will fail to compile. This requirement ensures that all new runtime options are evaluated for their cross-client compatibility impact.
 
-> **Note:** For options that do not affect the data format, they should be explicitly omitted from `RuntimeOptionsAffectingDocSchema` (see the code comments for guidance).
+> **Note:** The document schema is the enforcement mechanism for cross-client compatibility, so any
+> breaking change must go through it. If you are following the steps in this section, your option must
+> be configured in both maps below.
 
 **First map: `runtimeOptionsAffectingDocSchemaConfigMap`** — Handles the [Default Configurations](#default-configurations) described above. Configure the entry corresponding to your runtime option as per the comments in the code. Each entry maps `MinimumVersionForCollab` values to the appropriate default value for that option.
 
@@ -159,9 +161,15 @@ A feature gate can be removed when **all** of the following are true:
    [Step 4](#4-file-a-tracking-item-to-remove-the-container-runtime-option)) has
    been approved for cleanup.
 
-**Example:** Suppose option `enableFoo` has a version threshold of
-`"2.50.0"`. Then all clients within the compatibility window understand the
-feature, and the gate can be removed.
+**Example:** Suppose `enableFoo` has a version threshold of `"2.103.0"`
+(introduced at CC-1 = `2.103.0`), and hypothetical later checkpoints are CC-2
+(`2.130.0`), CC-3 (`2.155.0`), CC-4 (`2.180.0`), CC-5 (`2.205.0`).
+
+- **At CC-4** the compat window is CC-1 through CC-4, so CC-1 clients are still
+  supported and the gate must remain.
+- **At CC-5** the window shifts to CC-2 through CC-5. The oldest supported
+  version (`2.130.0`) is above the `2.103.0` threshold, so every client in the
+  window understands the feature — the gate can be removed in the CC-5 release.
 
 ### How to remove a feature gate
 
@@ -169,13 +177,10 @@ feature, and the gate can be removed.
 2. Remove the corresponding entries from `runtimeOptionsAffectingDocSchemaConfigMap`
    and `runtimeOptionsAffectingDocSchemaConfigValidationMap` in
    [containerCompatibility.ts](./packages/runtime/container-runtime/src/containerCompatibility.ts).
-3. Remove the property from `IDocumentSchemaFeatures` in
-   [documentSchema.ts](./packages/runtime/container-runtime/src/summary/documentSchema.ts)
-   and update `documentSchemaSupportedConfigs` accordingly.
-4. Hard-code the previously gated behavior as the unconditional default.
-5. Update or remove any e2e tests that were specifically testing the
+3. Hard-code the previously gated behavior as the unconditional default.
+4. Update or remove any e2e tests that were specifically testing the
    enable/disable toggle for this feature.
-6. Close the corresponding tracking item.
+5. Close the corresponding tracking item.
 
 > **Note:** Features that are intentionally opt-in (e.g., `enableRuntimeIdCompressor`)
 > should **not** be cleaned up — their gates are permanent.

@@ -41,6 +41,10 @@ designated **compatibility checkpoints**. Checkpoints are published on a **6-mon
 in the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page. Any two clients are compatible
 as long as their checkpoint releases are within ~18 months of each other (spanning Checkpoint N through Checkpoint N-3).
 
+> **Note:** `N` is defined as the latest checkpoint, but
+> the window extends in both directions. Any checkpoint is compatible
+> with the 3 checkpoints before and after it.
+
 **Enforcement:** Incompatible clients will be blocked from collaborating on a document and shown a clear error message (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor)).
 
 ### Examples
