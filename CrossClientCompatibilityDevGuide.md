@@ -169,7 +169,7 @@ A feature gate can be removed when **all** of the following are true:
   supported and the gate must remain.
 - **At CC-5** the window shifts to CC-2 through CC-5. The oldest supported
   version (`2.130.0`) is above the `2.103.0` threshold, so every client in the
-  window understands the feature — the gate can be removed in the CC-5 release.
+  window understands the feature — the gate can be removed in or anytime after the CC-5 release.
 
 ### How to remove a feature gate
 
