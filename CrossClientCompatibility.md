@@ -52,6 +52,14 @@ as long as their checkpoint releases are within ~18 months of each other (spanni
 | **Checkpoint N / Checkpoint N-3** | ~18 months | ✅ Compatible |
 | **Checkpoint N / Checkpoint N-4 or older** | >18 months | ❌ Not supported |
 
+> **Note on non-checkpoint versions:** Customers are not required to run checkpoint
+> releases. A client on non-checkpoint version inherits the compatibility guarantees
+> of the nearest checkpoint at or below its version.
+>
+> For example, let's say
+> checkpoints were designated at `2.100.0` and `2.200.0`. A client on version
+> `2.150.0` would inherit `2.100.0`'s compatibility window.
+
 ## Cross-client Compatibility Configuration and Enforcement
 
 ### minVersionForCollab
