@@ -26,4 +26,8 @@ export const compatibilityModeRuntimeOptions: Record<
 		// is bundled with the fluid-framework package, we need to enable it here to support SharedTree.
 		enableRuntimeIdCompressor: "on",
 	},
+	"CC-1": {
+		// CC-1 is a 2.x checkpoint, so it requires the same runtime options as mode "2".
+		enableRuntimeIdCompressor: "on",
+	},
 };
