@@ -133,7 +133,8 @@ You may also set individual runtime options via `IContainerRuntimeOptions`, but 
 
 If `minVersionForCollab` is not explicitly set, a conservative default is used (see `defaultMinVersionForCollab` in [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)).
 
-We recommend maintaining `minVersionForCollab` at the latest release that your users are [saturated](#terminology) on which falls within the same supported compatibility checkpoint window as the version you intend to upgrade to. This will ensure:
+We recommend setting `minVersionForCollab` to the oldest Fluid version your users are
+[saturated](#terminology) on. This will ensure:
 1. Older and newer clients can collaborate with each other safely.
 2. Your application can leverage new Fluid features as soon as they become safe for cross-client collaboration.
 
@@ -142,9 +143,8 @@ We recommend maintaining `minVersionForCollab` at the latest release that your u
 We recommend following the below pattern to ensure cross-client compatibility. While these steps are especially important when upgrading major versions of Fluid, keeping your compatibility configuration up-to-date on an ongoing basis ensures you are always within a safe compatibility window.
 
 1. Observe the distribution of Fluid versions across your application's clients. See [Observing Client Version Distribution](./FluidCompatibilityConsiderations.md#observing-client-version-distribution) for how to do this using telemetry.
-2. Update your compatibility configuration to match the lowest deployed version that your clients are [saturated](#terminology) on:
-   - **Declarative model**: Set `CompatibilityMode` once clients are saturated on a Fluid release that
-     falls within the same supported compatibility checkpoint window as the version you intend to upgrade to.
+2. Update your compatibility configuration to match the oldest deployed version that your clients are [saturated](#terminology) on:
+   - **Declarative model**: Set `CompatibilityMode` to the value corresponding to that saturated version.
    - **Encapsulated model**: Set `minVersionForCollab` to the specific saturated version (e.g., `"2.10.0"`).
 3. Verify that the configured compatibility checkpoint is within the supported compatibility window of the Fluid version you want to upgrade to. If it is, bump your Fluid dependencies and no further action is required. If not, wait for further saturation and return to step 1.
 4. Monitor telemetry for warnings/errors to ensure safe rollout (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor) below). At this point any clients that are not saturated may be blocked from accessing the document.

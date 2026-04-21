@@ -123,15 +123,15 @@ In [containerCompatibility.ts](./packages/runtime/container-runtime/src/containe
 
 > The exact implementation of these configuration maps may change in the future. Refer to the code comments for the latest guidance as they should be the most up-to-date source of truth.
 
-### 4. File an ADO item to remove the container runtime option
+### 4. File a tracking item to remove the container runtime option
 
 Because the compatibility window is time-bounded (currently 18 months), feature gates
 will eventually age out of the window and can be removed. However, some features
 (e.g., `enableRuntimeIdCompressor`) may never be enabled by default — in those cases,
 the enable/disable mechanism is kept indefinitely. Other features
 (e.g., `enableGroupedBatching`) are intended to eventually be a non-optional part of
-Fluid. If your change is the latter, file an ADO item to eventually remove the
-container runtime option entirely. See
+Fluid. If your change is the latter, file an internal tracking item to eventually
+remove the container runtime option entirely. See
 [Cleaning Up Old Feature Gates](#cleaning-up-old-feature-gates) for when and how
 removal becomes possible.
 
@@ -155,9 +155,9 @@ A feature gate can be removed when **all** of the following are true:
    is older than the oldest supported compatibility checkpoint (see the
    [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page).
 2. No supported checkpoint release needs the ability to disable the feature.
-3. The corresponding ADO work item (filed in
-   [Step 4](#4-file-an-ado-item-to-remove-the-container-runtime-option)) has been
-   approved for cleanup.
+3. The corresponding tracking item (filed in
+   [Step 4](#4-file-a-tracking-item-to-remove-the-container-runtime-option)) has
+   been approved for cleanup.
 
 **Example:** Suppose option `enableFoo` has a version threshold of
 `"2.50.0"`. Then all clients within the compatibility window understand the
@@ -175,7 +175,7 @@ feature, and the gate can be removed.
 4. Hard-code the previously gated behavior as the unconditional default.
 5. Update or remove any e2e tests that were specifically testing the
    enable/disable toggle for this feature.
-6. Close the corresponding ADO work item.
+6. Close the corresponding tracking item.
 
 > **Note:** Features that are intentionally opt-in (e.g., `enableRuntimeIdCompressor`)
 > should **not** be cleaned up — their gates are permanent.
