@@ -144,7 +144,7 @@ We recommend setting `minVersionForCollab` to the oldest Fluid version your user
 
 #### Best Practices
 
-We recommend following the below pattern to ensure cross-client compatibility. While these steps are especially important when upgrading major versions of Fluid, keeping your compatibility configuration up-to-date on an ongoing basis ensures you are always within a safe compatibility window.
+We recommend following the below pattern to ensure cross-client compatibility. Keeping your compatibility configuration up-to-date on an ongoing basis ensures you are always within a safe compatibility window.
 
 1. Observe the distribution of Fluid versions across your application's clients. See [Observing Client Version Distribution](./FluidCompatibilityConsiderations.md#observing-client-version-distribution) for how to do this using telemetry.
 2. Update your compatibility configuration to match the oldest deployed version that your clients are [saturated](#terminology) on:
