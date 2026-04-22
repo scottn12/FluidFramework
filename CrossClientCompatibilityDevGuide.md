@@ -12,6 +12,7 @@ This guide covers:
 - **Enforcing the Policy** - How `minVersionForCollab`, default configurations, and unsafe configuration prevention work together
 - **Safely Staging Breaking Changes** - Step-by-step process for shipping data-format changes
 - **Cleaning Up Old Feature Gates** - When and how to remove feature gates that have aged out of the compatibility window
+- **Designating a New Compatibility Checkpoint** - Checklist of updates required each time a new checkpoint is designated
 - **Testing** - How to validate cross-client compatibility using the e2e test infrastructure
 
 ### Terminology
@@ -162,14 +163,16 @@ A feature gate can be removed when **all** of the following are true:
    been approved for cleanup.
 
 **Example:** Suppose `enableFoo` has a version threshold of `"2.103.0"`
-(support introduced at or before CC-1 = `2.103.0`), and hypothetical later checkpoints are CC-2
-(`2.130.0`), CC-3 (`2.155.0`), CC-4 (`2.180.0`), CC-5 (`2.205.0`).
+(support introduced at or before CC-4 = `2.103.0`), and hypothetical later
+checkpoints are CC-5 (`2.133.0`), CC-6 (`2.163.0`), CC-7 (`2.193.0`),
+CC-8 (`2.223.0`).
 
-- **At CC-4** the compat window is CC-1 through CC-4, so CC-1 clients are still
+- **At CC-7** the compat window is CC-4 through CC-7, so CC-4 clients are still
   supported and the gate must remain.
-- **At CC-5** the window shifts to CC-2 through CC-5. The oldest supported
-  version (`2.130.0`) is above the `2.103.0` threshold, so every client in the
-  window understands the feature — the gate can be removed in or anytime after the CC-5 release.
+- **At CC-8** the window shifts to CC-5 through CC-8. The oldest supported
+  version (`2.133.0`) is above the `2.103.0` threshold, so every client in the
+  window understands the feature — the gate can be removed in or anytime after
+  the CC-8 release.
 
 ### How to remove a feature gate
 
@@ -184,6 +187,25 @@ A feature gate can be removed when **all** of the following are true:
 
 > **Note:** Features that are intentionally opt-in (e.g., `enableRuntimeIdCompressor`)
 > should **not** be cleaned up — their gates are permanent.
+
+## Designating a New Compatibility Checkpoint
+
+When a new compatibility checkpoint is designated (every ~6 months), the
+following updates are required to keep the framework's guarantees and
+enforcement in sync with the new supported window:
+
+1. **Update the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page:**
+   Update the list of supported checkpoints to include details for the new checkpoint.
+2. **Update the declarative model's `CompatibilityMode` mapping:** In
+   [utils.ts](./packages/framework/fluid-static/src/utils.ts), add a
+   `CompatibilityMode` value for the new checkpoint (e.g., `"CC-N"`) mapped to
+   the corresponding `minVersionForCollab`.
+3. **Advance `defaultMinVersionForCollab`:** Update the default in
+   [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)
+   to the oldest checkpoint still in the supported window.
+4. **Update the e2e test matrix:** The `FullCompat` version matrix is derived
+   from the currently supported checkpoints — update it so tests only run
+   against versions within the new window.
 
 ## Testing
 

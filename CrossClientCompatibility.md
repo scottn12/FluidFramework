@@ -107,8 +107,8 @@ Below is the mapping of `CompatibilityMode` values to `minVersionForCollab` at t
 | `"2"` | Supports collaboration with 2.x clients only. Enables newer features (e.g., runtime ID compressor for SharedTree support). | `"2.0.0"` |
 
 > **Note:** As new compatibility checkpoints are designated, a corresponding
-> `CompatibilityMode` value will be added for each one (e.g., `"CC-1"` for
-> checkpoint CC-1). When a checkpoint ages out of the compatibility window, its
+> `CompatibilityMode` value will be added for each one (e.g., `"CC-4"` for
+> checkpoint CC-4). When a checkpoint ages out of the compatibility window, its
 > mode is deprecated and eventually removed.
 
 #### Configuring Cross-Client Compatibility (Encapsulated Model)
