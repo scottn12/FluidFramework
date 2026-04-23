@@ -96,6 +96,27 @@ As an application developer, you need to manage your Fluid version upgrades care
 
 The cross-client compatibility policy applies to both application models. Both models use the same underlying enforcement and feature-gating mechanisms. They differ only in how you configure them, which is described in the sections below.
 
+##### Scope by Layer
+
+In the **declarative model**, all layers are expected to use the same Fluid version, so the
+18-month policy above is the only consideration.
+
+The **encapsulated model** lets you mix versions across layers. If your
+application does, each layer interacts with the policy differently:
+
+- **Driver:** No cross-client consideration — any driver version is
+  compatible with any other.
+- **Loader:** Up to ~33 months apart across two clients. The Runtime ↔ Loader
+  [layer-compat window](./LayerCompatibility.md#support-window-by-layer-boundary)
+  is asymmetric (12 months backward, 3 months forward), stacking on top of
+  the 18-month runtime window.
+- **Runtime:** Up to ~18 months apart across two clients (the policy above).
+- **Datastore / DDSes:** Up to ~24 months apart across two clients. The
+  Runtime ↔ Datastore
+  [layer-compat window](./LayerCompatibility.md#support-window-by-layer-boundary)
+  allows each client's datastore to drift up to 3 months from its runtime in
+  either direction, stacking on top of the 18-month runtime window.
+
 #### Configuring Cross-Client Compatibility (Declarative Model)
 
 If you are using a service client (i.e. `AzureClient` or `OdspClient`), cross-client compatibility is configured via the `CompatibilityMode` parameter. This is a required argument when creating or loading a container:
