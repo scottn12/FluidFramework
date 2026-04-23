@@ -22,7 +22,8 @@ for full terminology definitions. Key terms used in this guide:
 
 | Term | Definition |
 |------|------------|
-| **Compatibility Checkpoint** | A Fluid release that marks a compatibility boundary. Published on a regular cadence. |
+| **Compatibility Checkpoint Release** | The specific Fluid release that opens a checkpoint. Cross-client breaking changes may only land in a Compatibility Checkpoint Release. |
+| **Compatibility Checkpoint Range** | The semver range of Fluid releases covered by a checkpoint. Every release in the range shares the same cross-client compatibility guarantees as the first release in the range. |
 | **Compatibility Window** | The set of checkpoints guaranteed to be cross-client compatible (currently ~18 months, spanning Checkpoint N through Checkpoint N-3). |
 
 ## Identifying Cross-Client Compatibility Breaking Changes
@@ -91,6 +92,10 @@ const runtimeOptionsAffectingDocSchemaConfigValidationMap: ConfigValidationMap<R
 ## Safely Staging Cross-Client Compatibility Breaking Changes
 
 The following steps describe how to safely stage changes that break cross-client compatibility.
+
+> **Note:** Cross-client breaking changes should aim to land in a
+> **Compatibility Checkpoint Release** to maximize the compatibility window
+> for clients in prior ranges.
 
 ### 1. Evaluate if a change breaks the cross-client compatibility policy
 

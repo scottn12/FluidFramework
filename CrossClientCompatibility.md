@@ -28,18 +28,23 @@ This document explains:
 
 | Term | Definition |
 |------|------------|
-| **Compatibility Checkpoint** | A Fluid release that marks a compatibility boundary. Checkpoints are published on a regular cadence and documented in the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page. The set of supported checkpoint releases defines the cross-client compatibility window. |
-| **Checkpoint N** | The most recent compatibility checkpoint release |
-| **Checkpoint N-1** | The second most recent compatibility checkpoint release |
-| **Checkpoint N-2** | The third most recent compatibility checkpoint release |
-| **Saturation** | When an adequate percentage of an application's clients are running a certain version. The threshold that is considered adequate is defined by the application's requirements.  |
+| **Compatibility Checkpoint Release** | The first Fluid release in a checkpoint range (e.g., `2.103.0` for CC-4). |
+| **Compatibility Checkpoint Range** | The semver range of Fluid releases that are part of a checkpoint (e.g., `>=2.103.0 <2.133.0` for CC-4). All releases in the range share the same cross-client compatibility guarantees as the first release of the range. |
+| **Checkpoint N** | The most recent compatibility checkpoint |
+| **Checkpoint N-1** | The second most recent compatibility checkpoint |
+| **Checkpoint N-2** | The third most recent compatibility checkpoint |
+| **Saturation** | When an adequate percentage of an application's clients are running a certain version. The threshold that is considered adequate is defined by the application's requirements. |
 
 ## Cross-Client Compatibility Policy
 
 The Fluid Framework guarantees cross-client compatibility within an **18-month window**, enforced through
-designated **compatibility checkpoints**. Checkpoints are published on a **6-month cadence** and identified
-in the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page. Any two clients are compatible
-as long as their checkpoint releases are within ~18 months of each other (spanning Checkpoint N through Checkpoint N-3).
+designated **compatibility checkpoints**. A new Compatibility Checkpoint Release is published on a
+**6-month cadence** and each checkpoint's Range spans until the next Compatibility Checkpoint Release.
+Checkpoints are identified in the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page.
+Any two clients are compatible as long as their checkpoints are within ~18 months of each other
+(spanning Checkpoint N through Checkpoint N-3). Because a Range extends for ~6 months after the
+opening Release, the effective compatibility window for a client toward the end of a Range can be
+up to ~24 months.
 
 > **Note:** `N` is defined as the latest checkpoint, but
 > the window extends in both directions. Any checkpoint is compatible

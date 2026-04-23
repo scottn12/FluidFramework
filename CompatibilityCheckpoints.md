@@ -1,4 +1,4 @@
-# Fluid Framework Compatibility Checkpoints
+# Fluid Framework Compatibility Checkpoint Releases
 
 This page lists all designated compatibility checkpoint releases for the Fluid Framework.
 See the [Cross-Client Compatibility Policy](./CrossClientCompatibility.md#cross-client-compatibility-policy)
@@ -12,18 +12,23 @@ Checkpoint N-3) are guaranteed to be cross-client compatible.
 
 ## Checkpoints
 
-The **Release Range** column expresses the set of Fluid versions that fall under
-each checkpoint.
+The **Release** column lists the Fluid release that designates
+checkpoint — cross-client breaking changes are only landed in a checkpoint
+release.
 
-| Checkpoint | Release Range | Earliest Date | Compatible With |
-|------------|---------------|---------------|-----------------|
-| CC-1 | `>=1.4.0 <2.0.0` | 2024-04-09 | CC-1, CC-2, CC-3, CC-4 |
-| CC-2 | `>=2.0.0 <2.70.0` | 2024-06-26 | CC-1, CC-2, CC-3, CC-4, CC-5 |
-| CC-3 | `>=2.70.0 <2.103.0` | 2025-10-28 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6 |
-| CC-4 | `>=2.103.0 <TBD` | ~2026-06-06 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6, CC-7 |
-| CC-5 | `TBD` | ~2026-12-06 | CC-2, CC-3, CC-4, CC-5, CC-6, CC-7, CC-8 |
-| CC-6 | `TBD` | ~2027-06-06 | CC-3, CC-4, CC-5, CC-6, CC-7, CC-8, CC-9 |
-| CC-7 | `TBD` | ~2027-12-06 | CC-4, CC-5, CC-6, CC-7, CC-8, CC-9, CC-10 |
+The **Range** column lists the semver range of Fluid releases that
+fall under the checkpoint; every release in the range shares the same
+cross-client compatibility guarantees as the first release.
+
+| Checkpoint | Release | Range | Earliest Date | Compatible With |
+|------------|---------|-------|---------------|-----------------|
+| CC-1 | `1.4.0` | `>=1.4.0 <2.0.0` | 2024-04-09 | CC-1, CC-2, CC-3, CC-4 |
+| CC-2 | `2.0.0` | `>=2.0.0 <2.70.0` | 2024-06-26 | CC-1, CC-2, CC-3, CC-4, CC-5 |
+| CC-3 | `2.70.0` | `>=2.70.0 <2.103.0` | 2025-10-28 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6 |
+| CC-4 | `2.103.0` | `>=2.103.0 <TBD` | ~2026-06-06 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6, CC-7 |
+| CC-5 | TBD | TBD | ~2026-12-06 | CC-2, CC-3, CC-4, CC-5, CC-6, CC-7, CC-8 |
+| CC-6 | TBD | TBD | ~2027-06-06 | CC-3, CC-4, CC-5, CC-6, CC-7, CC-8, CC-9 |
+| CC-7 | TBD | TBD | ~2027-12-06 | CC-4, CC-5, CC-6, CC-7, CC-8, CC-9, CC-10 |
 
 > **Notes:**
 >
