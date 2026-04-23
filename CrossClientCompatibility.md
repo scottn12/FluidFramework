@@ -46,9 +46,15 @@ Any two clients are compatible as long as their checkpoints are within ~18 month
 opening Release, the effective compatibility window for a client toward the end of a Range can be
 up to ~24 months.
 
-> **Note:** `N` is defined as the latest checkpoint, but
-> the window extends in both directions. Any checkpoint is compatible
-> with the 3 checkpoints before and after it.
+> **Notes:**
+>
+> - `N` is defined as the latest checkpoint, but the window extends in both
+>   directions. Any checkpoint is compatible with the 3 checkpoints before
+>   and after it.
+> - This policy is decoupled from major version boundaries. A new Fluid major
+>   version (e.g., `3.0`, `4.0`) does not automatically drop cross-client
+>   compatibility with prior majors — any cross-client breaking change
+>   introduced by a major version must still adhere to the 18-month window.
 
 **Enforcement:** Incompatible clients will be blocked from collaborating on a document and shown a clear error message (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor)).
 
