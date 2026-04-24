@@ -22,8 +22,8 @@ for full terminology definitions. Key terms used in this guide:
 
 | Term | Definition |
 |------|------------|
-| **Compatibility Checkpoint Release** | The specific Fluid release that opens a checkpoint. Cross-client breaking changes may only land in a Compatibility Checkpoint Release. |
-| **Compatibility Checkpoint Range** | The semver range of Fluid releases covered by a checkpoint. Every release in the range shares the same cross-client compatibility guarantees as the first release in the range. |
+| **Compatibility Checkpoint Release** | The first Fluid release in a checkpoint range (e.g., `2.103.0` for CC-4). |
+| **Compatibility Checkpoint Range** | The semver range of Fluid releases that are part of a checkpoint (e.g., `>=2.103.0 <2.133.0` for CC-4). All releases in the range share the same cross-client compatibility guarantees as the first release of the range. |
 | **Compatibility Window** | The set of checkpoints guaranteed to be cross-client compatible (currently ~18 months, spanning Checkpoint N through Checkpoint N-3). |
 
 ## Identifying Cross-Client Compatibility Breaking Changes
@@ -167,17 +167,15 @@ A feature gate can be removed when **all** of the following are true:
    [Step 4](#4-file-a-tracking-item-to-remove-the-container-runtime-option)) has
    been approved for cleanup.
 
-**Example:** Suppose `enableFoo` has a version threshold of `"2.103.0"`
-(support introduced at or before CC-4 = `2.103.0`), and hypothetical later
-checkpoints are CC-5 (`2.133.0`), CC-6 (`2.163.0`), CC-7 (`2.193.0`),
-CC-8 (`2.223.0`).
+**Example:** Suppose `enableFoo` was introduced in version `2.100.0` and there are checkpoints
+CC-4 (`"2.103.0"), CC-5 (`"2.133.0"`), CC-6 (`"2.163.0"`), CC-7 (`"2.193.0"`), and CC-8 (`"2.223.0"`).
 
-- **At CC-7** the compat window is CC-4 through CC-7, so CC-4 clients are still
-  supported and the gate must remain.
-- **At CC-8** the window shifts to CC-5 through CC-8. The oldest supported
-  version (`2.133.0`) is above the `2.103.0` threshold, so every client in the
-  window understands the feature — the gate can be removed in or anytime after
-  the CC-8 release.
+- **At CC-6** the compat window is CC-3 through CC-6, so CC-3 clients are still
+  supported and the gate must remain. Some CC-3 clients (i.e. `2.90.0`) cannot understand the data format with `enableFoo` enabled, so the feature must remain gated.
+- **At CC-7** the window shifts to CC-4 through CC-7. The oldest supported
+  version (`2.103.0`) is above the `2.100.0` threshold, so every client in the
+  window understands the feature. The gate can be removed in or anytime after
+  the CC-7 release.
 
 ### How to remove a feature gate
 
@@ -195,9 +193,10 @@ CC-8 (`2.223.0`).
 
 ## Designating a New Compatibility Checkpoint
 
-When a new compatibility checkpoint is designated (every ~6 months), the
-following updates are required to keep the framework's guarantees and
-enforcement in sync with the new supported window:
+A new compatibility checkpoint should be designated no less than 6 months after
+the previous checkpoint. When a new compatibility checkpoint is designated, the
+following updates are required to keep the framework's guarantees and enforcement
+in sync with the new supported window:
 
 1. **Update the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page:**
    Update the list of supported checkpoints to include details for the new checkpoint.

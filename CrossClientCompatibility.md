@@ -84,9 +84,7 @@ up to ~24 months.
 1. **Cross-client compatibility enforcement**: Clients running a Fluid version older than what the document requires will be blocked from joining the collaboration session, preventing data corruption or runtime errors. See [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor) for the specific error signals.
 2. **Feature gating**: It automatically enables or disables features based on the specified version to ensure all collaborating clients can understand the resulting data format. For example, if `minVersionForCollab` is set to `"2.0.0"`, features like grouped batching are safely enabled because all clients at version 2.0.0 or later can interpret that format.
 
-If `minVersionForCollab` is not explicitly set, a default value is used. The default enables a conservative set of features that are safe for a broad range of clients. For details on the default value, see `defaultMinVersionForCollab` in [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts).
-
-> **Note:** While `minVersionForCollab` currently operates at the container runtime layer, cross-client compatibility applies across all Fluid layers (Driver, Loader, Runtime, and Datastore). See the [Interaction with Layer Compatibility](./FluidCompatibilityConsiderations.md#interaction-with-layer-compatibility) section in the Fluid Compatibility Considerations document for more on how cross-client and layer compatibility interact.
+If `minVersionForCollab` is not explicitly set, the runtime uses a default derived from the currently supported compatibility checkpoints. Passing a value below the supported floor is not permitted — the runtime will fail to instantiate and throw a `UsageError` (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor)). For details on the default value, see `defaultMinVersionForCollab` in [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts).
 
 ### What This Means for An Application
 
@@ -98,24 +96,16 @@ The cross-client compatibility policy applies to both application models. Both m
 
 ##### Scope by Layer
 
-In the **declarative model**, all layers are expected to use the same Fluid version, so the
-18-month policy above is the only consideration.
+The 18-month policy above applies uniformly to every Fluid layer that
+participates in cross-client communication (Loader, Runtime, Datastore / DDSes).
+The Driver layer is the only exception — it has no cross-client interactions,
+so any driver version is considered cross-client compatible with any other.
 
-The **encapsulated model** lets you mix versions across layers. If your
-application does, each layer interacts with the policy differently:
-
-- **Driver:** No cross-client consideration — any driver version is
-  compatible with any other.
-- **Loader:** Up to ~33 months apart across two clients. The Runtime ↔ Loader
-  [layer-compat window](./LayerCompatibility.md#support-window-by-layer-boundary)
-  is asymmetric (12 months backward, 3 months forward), stacking on top of
-  the 18-month runtime window.
-- **Runtime:** Up to ~18 months apart across two clients (the policy above).
-- **Datastore / DDSes:** Up to ~24 months apart across two clients. The
-  Runtime ↔ Datastore
-  [layer-compat window](./LayerCompatibility.md#support-window-by-layer-boundary)
-  allows each client's datastore to drift up to 3 months from its runtime in
-  either direction, stacking on top of the 18-month runtime window.
+This uniformity holds in both the declarative and encapsulated models; mixing
+versions across layers within a single client does not extend the cross-client
+window. Fluid handles the interaction between cross-client compat and layer
+compat internally (see
+[Interaction with Layer Compatibility](./FluidCompatibilityConsiderations.md#interaction-with-layer-compatibility)).
 
 #### Configuring Cross-Client Compatibility (Declarative Model)
 
@@ -167,7 +157,7 @@ If you construct a container runtime directly, cross-client compatibility is con
 
 You may also set individual runtime options via `IContainerRuntimeOptions`, but they must be consistent with your `minVersionForCollab` value. If there is a mismatch (e.g., enabling a 2.x feature with `minVersionForCollab: "1.0.0"`), a `UsageError` will be thrown (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor)).
 
-If `minVersionForCollab` is not explicitly set, a conservative default is used (see `defaultMinVersionForCollab` in [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)).
+If `minVersionForCollab` is not explicitly set, the runtime uses a default derived from the currently supported compatibility checkpoints (see `defaultMinVersionForCollab` in [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)). Passing a value below the supported floor is not permitted and will throw a `UsageError`.
 
 We recommend setting `minVersionForCollab` to the oldest Fluid version your users are
 [saturated](#terminology) on. This will ensure:
@@ -194,6 +184,7 @@ The following are errors and telemetry warnings you may see during and following
 | Telemetry Event | `MinVersionForCollabWarning` | Clients are joining with a version below your configured minimum, but are still able to understand the document's data format and therefore continue to collaborate. | If you see this warning message, it's likely a sign you updated `minVersionForCollab` too quickly. In future releases, ensure proper [saturation](#terminology) before updating. If these warning messages are ignored, you may risk seeing the below error in the future. |
 | `DataProcessingError` | `Document can't be opened with current version of the code` | An out-of-window client tried to join and was blocked due to being unable to collaborate with the newer client's document. | If this was unexpected, lower `minVersionForCollab` to allow older clients to join. |
 | `UsageError` | `Incompatible Runtime Option` | You manually enabled a feature that requires a higher minimum than your document allows. | Turn the feature off or raise `minVersionForCollab` (if there is proper [saturation](#terminology)). |
+| `UsageError` | `Version <X> is not a valid MinimumVersionForCollab` | You passed a `minVersionForCollab` that is below the supported floor (the oldest version Fluid still supports). The runtime fails to instantiate. | Raise `minVersionForCollab` to a supported version. See `validateMinimumVersionForCollab` in [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts). |
 
 ## Developer Guide
 
