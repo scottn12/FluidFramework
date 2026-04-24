@@ -13,8 +13,7 @@ through Checkpoint N-3) are guaranteed to be cross-client compatible.
 ## Checkpoints
 
 The **Release** column lists the Fluid release that designates the
-checkpoint — cross-client breaking changes are only landed in a checkpoint
-release.
+checkpoint.
 
 The **Range** column lists the semver range of Fluid releases that
 fall under the checkpoint; every release in the range shares the same
