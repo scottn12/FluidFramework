@@ -168,7 +168,7 @@ A feature gate can be removed when **all** of the following are true:
    been approved for cleanup.
 
 **Example:** Suppose `enableFoo` was introduced in version `2.100.0` and there are checkpoints
-CC-4 (`"2.103.0"), CC-5 (`"2.133.0"`), CC-6 (`"2.163.0"`), CC-7 (`"2.193.0"`), and CC-8 (`"2.223.0"`).
+CC-4 (`"2.103.0"`), CC-5 (`"2.133.0"`), CC-6 (`"2.163.0"`), CC-7 (`"2.193.0"`), and CC-8 (`"2.223.0"`).
 
 - **At CC-6** the compat window is CC-3 through CC-6, so CC-3 clients are still
   supported and the gate must remain. Some CC-3 clients (i.e. `2.90.0`) cannot understand the data format with `enableFoo` enabled, so the feature must remain gated.

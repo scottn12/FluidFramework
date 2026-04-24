@@ -68,7 +68,7 @@ up to ~24 months.
 | **Checkpoint N / Checkpoint N-4 or older** | >18 months | ❌ Not supported |
 
 > **Note on non-checkpoint versions:** Customers are not required to run checkpoint
-> releases. A client on non-checkpoint version inherits the compatibility guarantees
+> releases. A client on a non-checkpoint version inherits the compatibility guarantees
 > of the nearest checkpoint at or below its version.
 >
 > For example, let's say
@@ -86,7 +86,7 @@ up to ~24 months.
 
 If `minVersionForCollab` is not explicitly set, the runtime uses a default derived from the currently supported compatibility checkpoints. Passing a value below the supported floor is not permitted — the runtime will fail to instantiate and throw a `UsageError` (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor)). For details on the default value, see `defaultMinVersionForCollab` in [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts).
 
-### What This Means for An Application
+### What This Means for an Application
 
 As an application developer, you need to manage your Fluid version upgrades carefully to ensure uninterrupted collaboration for your users. By configuring `minVersionForCollab` appropriately and monitoring your client version distribution, you can safely upgrade while maintaining compatibility across your user base.
 

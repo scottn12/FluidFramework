@@ -12,7 +12,7 @@ Checkpoint N-3) are guaranteed to be cross-client compatible.
 
 ## Checkpoints
 
-The **Release** column lists the Fluid release that designates
+The **Release** column lists the Fluid release that designates the
 checkpoint — cross-client breaking changes are only landed in a checkpoint
 release.
 
