@@ -207,7 +207,12 @@ in sync with the new supported window:
 3. **Advance `defaultMinVersionForCollab`:** Update the default in
    [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)
    to the oldest checkpoint still in the supported window.
-4. **Update the e2e test matrix:** The `FullCompat` version matrix is derived
+4. **Advance `lowestMinVersionForCollab`:** Update the floor in
+   [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)
+   to match the oldest checkpoint still in the supported window.
+   `lowestMinVersionForCollab` is the absolute minimum value a customer can pass
+   as `minVersionForCollab` — values below it cause a `UsageError` at runtime.
+5. **Update the e2e test matrix:** The `FullCompat` version matrix is derived
    from the currently supported checkpoints — update it so tests only run
    against versions within the new window.
 

@@ -6,9 +6,9 @@ for how checkpoints define the compatibility window.
 
 ## Schedule
 
-Checkpoints are designated on a **6-month cadence**. Any two clients whose checkpoint
-releases are within **~18 months** of each other (spanning Checkpoint N through
-Checkpoint N-3) are guaranteed to be cross-client compatible.
+Checkpoints are designated on a cadence of **no less than 6 months**. Any two clients
+whose checkpoint releases are within **18 months** of each other (spanning Checkpoint N
+through Checkpoint N-3) are guaranteed to be cross-client compatible.
 
 ## Checkpoints
 
