@@ -23,12 +23,12 @@ cross-client compatibility guarantees as the first release.
 | Checkpoint | Release | Range | Earliest Date | Compatible With |
 | --- | --- | --- | --- | --- |
 | CC-1 | `1.4.0` | `>=1.4.0 <2.0.0` | 2024-04-09 | CC-1, CC-2, CC-3, CC-4 |
-| CC-2 | `2.0.0` | `>=2.0.0 <2.70.0` | 2024-06-26 | CC-1, CC-2, CC-3, CC-4, CC-5 |
-| CC-3 | `2.70.0` | `>=2.70.0 <2.103.0` | 2025-10-28 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6 |
-| CC-4 | `2.103.0` | `>=2.103.0 <TBD` | ~2026-06-08 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6, CC-7 |
-| CC-5 | TBD | TBD | ~2026-12-08 | CC-2, CC-3, CC-4, CC-5, CC-6, CC-7, CC-8 |
-| CC-6 | TBD | TBD | ~2027-06-08 | CC-3, CC-4, CC-5, CC-6, CC-7, CC-8, CC-9 |
-| CC-7 | TBD | TBD | ~2027-12-08 | CC-4, CC-5, CC-6, CC-7, CC-8, CC-9, CC-10 |
+| CC-2 | `2.0.0` | `>=2.0.0 <2.60.0` | 2024-06-26 | CC-1, CC-2, CC-3, CC-4, CC-5 |
+| CC-3 | `2.60.0` | `>=2.60.0 <2.100.0` | 2025-09-02 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6 |
+| CC-4 | `2.100.0` | `>=2.100.0 <TBD` | 2026-04-27 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6, CC-7 |
+| CC-5 | TBD | TBD | ~2026-10-27 | CC-2, CC-3, CC-4, CC-5, CC-6, CC-7, CC-8 |
+| CC-6 | TBD | TBD | ~2027-04-27 | CC-3, CC-4, CC-5, CC-6, CC-7, CC-8, CC-9 |
+| CC-7 | TBD | TBD | ~2027-10-27 | CC-4, CC-5, CC-6, CC-7, CC-8, CC-9, CC-10 |
 
 > **Notes:**
 >
