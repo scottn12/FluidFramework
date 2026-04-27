@@ -85,7 +85,7 @@ If `minVersionForCollab` is not explicitly set, the runtime uses a default deriv
 
 ### What This Means for an Application
 
-As an application developer, you need to manage your Fluid Framework version upgrades carefully to ensure uninterrupted collaboration for your users. It is **highly recommended** to explicitly configure `minVersionForCollab` and monitor your client version distribution. Setting `minVersionForCollab` explicitly surfaces version mismatches at build time. This prevents a release from shipping and silently raising the floor, locking older clients out.
+As an application developer, you need to manage your Fluid Framework version upgrades carefully to ensure uninterrupted collaboration for your users. It is **highly recommended** to explicitly configure `minVersionForCollab` and monitor your client version distribution. Setting `minVersionForCollab` explicitly surfaces version mismatches at build and verification time. This prevents a release from shipping and silently raising the floor, locking older clients out.
 
 #### Encapsulated vs Declarative Models
 
@@ -168,7 +168,7 @@ We recommend following the below pattern to ensure cross-client compatibility. K
 2. Update your compatibility configuration to match the oldest deployed version that your clients are [saturated](#terminology) on:
     - **Declarative model**: Set `CompatibilityMode` to the value corresponding to that saturated version.
     - **Encapsulated model**: Set `minVersionForCollab` to the specific saturated version (e.g., `"2.10.0"`).
-3. Verify that the configured compatibility checkpoint is within the supported compatibility window of the Fluid version you want to upgrade to. If it is, bump your Fluid dependencies and no further action is required. If not, wait for further saturation and return to step 1.
+3. Verify that the configured compatibility checkpoint is within the supported compatibility window of the Fluid Framework version you want to upgrade to. If it is, bump your Fluid Framework dependencies and update your lock file (so a newer version isn't picked up implicitly); no further action is required. If not, wait for further saturation and return to step 1.
 4. Monitor telemetry for warnings/errors to ensure safe rollout (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor) below). At this point any clients running a version older than the configured `minVersionForCollab` may be blocked from accessing the document.
 
 #### Errors and Warnings to Monitor

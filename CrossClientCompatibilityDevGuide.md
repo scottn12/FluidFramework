@@ -194,7 +194,11 @@ CC-4 (`"2.100.0"`), CC-5 (`"2.130.0"`), CC-6 (`"2.160.0"`), CC-7 (`"2.190.0"`), 
 ## Designating a New Compatibility Checkpoint
 
 A new compatibility checkpoint should be designated no less than 6 months after
-the previous checkpoint. When a new compatibility checkpoint is designated, the
+the previous checkpoint. It should also be designated on a new major or beta
+boundary (e.g., `3.0.0`, `2.100.0`), so the prior
+checkpoint can extend cleanly to that boundary and support the previous checkpoint.
+
+When a new compatibility checkpoint is designated, the
 following updates should be considered to keep the framework's guarantees and
 enforcement in sync with the new supported window. **Step 1 is required.**
 Steps 2–4 are at our discretion: there is no rule against supporting compatibility

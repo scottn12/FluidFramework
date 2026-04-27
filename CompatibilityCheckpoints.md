@@ -12,12 +12,15 @@ through Checkpoint N-3) are guaranteed to be cross-client compatible.
 
 ## Checkpoints
 
-The **Release** column lists the Fluid release that designates the
-checkpoint.
+The **Version Range** column lists the semver range of Fluid Framework releases
+that fall under the checkpoint; every release in the range shares the same
+cross-client compatibility guarantees as the opening release (the range's lower
+bound).
 
-The **Range** column lists the semver range of Fluid releases that
-fall under the checkpoint; every release in the range shares the same
-cross-client compatibility guarantees as the first release.
+The **Compatible Semantic Versions** column lists the full semver range a
+client running a checkpoint version is guaranteed to be compatible with. Upper
+bounds for in-window checkpoints are estimated and depend on when future
+checkpoints are designated.
 
 <!-- prettier-ignore -->
 | Checkpoint | Version Range | Earliest Date | Compatible Checkpoints | Compatible Semantic Versions |
@@ -33,9 +36,8 @@ cross-client compatibility guarantees as the first release.
 > **Notes:**
 >
 > 1. `CC-1`, `CC-2`, and `CC-3` were designated retroactively based on existing
->    Fluid releases, which is why their release ranges are wider than the
->    6-month windows targeted for subsequent checkpoints. Starting with
->    `CC-4`, checkpoints follow the standard ~6-month cadence.
-> 2. Dates and release ranges for future checkpoints are estimates and are
+>    Fluid Framework releases, which is why the cadence between them is
+>    irregular. Starting with `CC-4`, checkpoints follow the standard cadence.
+> 2. Dates and version ranges for future checkpoints are estimates and are
 >    subject to change. Exact release versions and dates will be added as each
 >    checkpoint is designated.
