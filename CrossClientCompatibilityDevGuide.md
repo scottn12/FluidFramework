@@ -20,11 +20,11 @@ This guide covers:
 See the [Cross-Client Compatibility Policy](./CrossClientCompatibility.md#terminology)
 for full terminology definitions. Key terms used in this guide:
 
-| Term | Definition |
-|------|------------|
-| **Compatibility Checkpoint Release** | The first Fluid release in a checkpoint range (e.g., `2.103.0` for CC-4). |
-| **Compatibility Checkpoint Range** | The semver range of Fluid releases that are part of a checkpoint (e.g., `>=2.103.0 <2.133.0` for CC-4). All releases in the range share the same cross-client compatibility guarantees as the first release of the range. |
-| **Compatibility Window** | The set of checkpoints guaranteed to be cross-client compatible (currently ~18 months in each direction, spanning Checkpoint N-3 through Checkpoint N+3). |
+| Term                                 | Definition                                                                                                                                                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Compatibility Checkpoint Release** | The first Fluid release in a checkpoint range (e.g., `2.103.0` for CC-4).                                                                                                                                                 |
+| **Compatibility Checkpoint Range**   | The semver range of Fluid releases that are part of a checkpoint (e.g., `>=2.103.0 <2.133.0` for CC-4). All releases in the range share the same cross-client compatibility guarantees as the first release of the range. |
+| **Compatibility Window**             | The set of checkpoints guaranteed to be cross-client compatible (currently ~18 months in each direction, spanning Checkpoint N-3 through Checkpoint N+3).                                                                 |
 
 ## Identifying Cross-Client Compatibility Breaking Changes
 
@@ -54,15 +54,15 @@ The runtime uses `minVersionForCollab` to automatically set certain container ru
 ```typescript
 // Simplified view of the config map (see containerCompatibility.ts for full details)
 const runtimeOptionsAffectingDocSchemaConfigMap: ConfigMap<RuntimeOptionsAffectingDocSchema> = {
-    enableGroupedBatching: {
-        "1.0.0": false,
-        "2.0.0-defaults": true,
-    },
-    createBlobPayloadPending: {
-        "1.0.0": undefined,
-        // Could be enabled by default in a future version
-    },
-    // ... other options
+	enableGroupedBatching: {
+		"1.0.0": false,
+		"2.0.0-defaults": true,
+	},
+	createBlobPayloadPending: {
+		"1.0.0": undefined,
+		// Could be enabled by default in a future version
+	},
+	// ... other options
 };
 ```
 
@@ -76,17 +76,18 @@ If a client tries to enable a runtime option that requires a version higher than
 
 ```typescript
 // Simplified view of the validation map (see containerCompatibility.ts for full details)
-const runtimeOptionsAffectingDocSchemaConfigValidationMap: ConfigValidationMap<RuntimeOptionsAffectingDocSchema> = {
-    enableGroupedBatching: configValueToMinVersionForCollab([
-        [false, "1.0.0"],
-        [true, "2.0.0-defaults"],
-    ]),
-    createBlobPayloadPending: configValueToMinVersionForCollab([
-        [undefined, "1.0.0"],
-        [true, "2.40.0"],
-    ]),
-    // ... other options
-};
+const runtimeOptionsAffectingDocSchemaConfigValidationMap: ConfigValidationMap<RuntimeOptionsAffectingDocSchema> =
+	{
+		enableGroupedBatching: configValueToMinVersionForCollab([
+			[false, "1.0.0"],
+			[true, "2.0.0-defaults"],
+		]),
+		createBlobPayloadPending: configValueToMinVersionForCollab([
+			[undefined, "1.0.0"],
+			[true, "2.40.0"],
+		]),
+		// ... other options
+	};
 ```
 
 ## Safely Staging Cross-Client Compatibility Breaking Changes

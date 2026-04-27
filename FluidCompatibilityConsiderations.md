@@ -25,11 +25,12 @@ flowchart TD
 ### How Code and Data create Compatibility Dimensions
 
 **From Code:**
+
 - **API compatibility** arises because applications depend on public APIs that are released across versions (including alpha and beta APIs). Applications need a stable, predictable upgrade path as Fluid releases new package versions.
 - **Layer compatibility** arises because Fluid's modular design consists of four distinct layers (Driver, Loader, Runtime, and Datastore), each of which can be versioned independently. These layers must interoperate at runtime even when they're at different versions. They interact by calling APIs (mostly internal) on other layers and the signatures and behavior of these APIs must be compatible.
 
-
 **From Data:**
+
 - **Data-at-rest compatibility** arises because documents (stored as summaries/snapshots) may be dormant for extended periods and then reopened by clients running newer versions of Fluid.
 - **Cross-client compatibility** arises because multiple clients collaborating on the same document in real-time by exchanging ops may be running different versions of Fluid during rolling upgrades or version transitions.
 
@@ -52,7 +53,6 @@ Layer compatibility implies that a single client can have different versions for
 ### Motivation
 
 See [Fluid Framework Layer Compatibility](./LayerCompatibility.md) for motivation and other details about layer compatibility.
-
 
 ### Architecture diagram
 
@@ -82,6 +82,7 @@ graph TD
 ```
 
 This diagram shows different Fluid layers with different versions in a client:
+
 - **Driver layer**: Fluid package version A.
 - **Loader layer**: Fluid package version B.
 - **Runtime layer**: Fluid package version C.
@@ -157,6 +158,7 @@ graph LR
 ```
 
 This diagram shows two clients collaborating on the same document:
+
 - **Client 1** runs Fluid package version A (older version)
 - **Client 2** runs Fluid package version B (newer version)
 - Both clients communicate through the **Fluid Service**
@@ -165,7 +167,7 @@ This diagram shows two clients collaborating on the same document:
 
 ### Interaction with Layer Compatibility
 
-Note that each client here may have a different set of versions on each layer.  Cross-client compatibility actually applies between like layers. So the version of each layer must satisfy layer-compat requirements with the other layers on that client, _and_ cross-client compat requirements with the other clients that may join the collaboration session.
+Note that each client here may have a different set of versions on each layer. Cross-client compatibility actually applies between like layers. So the version of each layer must satisfy layer-compat requirements with the other layers on that client, _and_ cross-client compat requirements with the other clients that may join the collaboration session.
 
 ## Observing Client Version Distribution
 

@@ -19,15 +19,15 @@ The **Range** column lists the semver range of Fluid releases that
 fall under the checkpoint; every release in the range shares the same
 cross-client compatibility guarantees as the first release.
 
-| Checkpoint | Release | Range | Earliest Date | Compatible With |
-|------------|---------|-------|---------------|-----------------|
-| CC-1 | `1.4.0` | `>=1.4.0 <2.0.0` | 2024-04-09 | CC-1, CC-2, CC-3, CC-4 |
-| CC-2 | `2.0.0` | `>=2.0.0 <2.70.0` | 2024-06-26 | CC-1, CC-2, CC-3, CC-4, CC-5 |
-| CC-3 | `2.70.0` | `>=2.70.0 <2.103.0` | 2025-10-28 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6 |
-| CC-4 | `2.103.0` | `>=2.103.0 <TBD` | ~2026-06-08 | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6, CC-7 |
-| CC-5 | TBD | TBD | ~2026-12-08 | CC-2, CC-3, CC-4, CC-5, CC-6, CC-7, CC-8 |
-| CC-6 | TBD | TBD | ~2027-06-08 | CC-3, CC-4, CC-5, CC-6, CC-7, CC-8, CC-9 |
-| CC-7 | TBD | TBD | ~2027-12-08 | CC-4, CC-5, CC-6, CC-7, CC-8, CC-9, CC-10 |
+| Checkpoint | Release   | Range               | Earliest Date | Compatible With                           |
+| ---------- | --------- | ------------------- | ------------- | ----------------------------------------- |
+| CC-1       | `1.4.0`   | `>=1.4.0 <2.0.0`    | 2024-04-09    | CC-1, CC-2, CC-3, CC-4                    |
+| CC-2       | `2.0.0`   | `>=2.0.0 <2.70.0`   | 2024-06-26    | CC-1, CC-2, CC-3, CC-4, CC-5              |
+| CC-3       | `2.70.0`  | `>=2.70.0 <2.103.0` | 2025-10-28    | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6        |
+| CC-4       | `2.103.0` | `>=2.103.0 <TBD`    | ~2026-06-08   | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6, CC-7  |
+| CC-5       | TBD       | TBD                 | ~2026-12-08   | CC-2, CC-3, CC-4, CC-5, CC-6, CC-7, CC-8  |
+| CC-6       | TBD       | TBD                 | ~2027-06-08   | CC-3, CC-4, CC-5, CC-6, CC-7, CC-8, CC-9  |
+| CC-7       | TBD       | TBD                 | ~2027-12-08   | CC-4, CC-5, CC-6, CC-7, CC-8, CC-9, CC-10 |
 
 > **Notes:**
 >
