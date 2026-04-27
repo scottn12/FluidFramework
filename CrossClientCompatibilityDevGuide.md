@@ -24,7 +24,7 @@ for full terminology definitions. Key terms used in this guide:
 |------|------------|
 | **Compatibility Checkpoint Release** | The first Fluid release in a checkpoint range (e.g., `2.103.0` for CC-4). |
 | **Compatibility Checkpoint Range** | The semver range of Fluid releases that are part of a checkpoint (e.g., `>=2.103.0 <2.133.0` for CC-4). All releases in the range share the same cross-client compatibility guarantees as the first release of the range. |
-| **Compatibility Window** | The set of checkpoints guaranteed to be cross-client compatible (currently ~18 months, spanning Checkpoint N through Checkpoint N-3). |
+| **Compatibility Window** | The set of checkpoints guaranteed to be cross-client compatible (currently ~18 months in each direction, spanning Checkpoint N-3 through Checkpoint N+3). |
 
 ## Identifying Cross-Client Compatibility Breaking Changes
 
@@ -160,8 +160,8 @@ removed.
 A feature gate can be removed when **all** of the following are true:
 
 1. The feature's version threshold in `runtimeOptionsAffectingDocSchemaConfigMap`
-   is older than the oldest supported compatibility checkpoint (see the
-   [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page).
+   is older than or equal to the oldest supported compatibility checkpoint (see the
+   [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page). <!-- PR #27064 r3140739166 -->
 2. No supported checkpoint release needs the ability to disable the feature.
 3. The corresponding tracking item (filed in
    [Step 4](#4-file-a-tracking-item-to-remove-the-container-runtime-option)) has

@@ -30,10 +30,8 @@ This document explains:
 |------|------------|
 | **Compatibility Checkpoint Release** | The first Fluid release in a checkpoint range (e.g., `2.103.0` for CC-4). |
 | **Compatibility Checkpoint Range** | The semver range of Fluid releases that are part of a checkpoint (e.g., `>=2.103.0 <2.133.0` for CC-4). All releases in the range share the same cross-client compatibility guarantees as the first release of the range. |
-| **Checkpoint N** | The most recent compatibility checkpoint |
-| **Checkpoint N-1** | The second most recent compatibility checkpoint |
-| **Checkpoint N-2** | The third most recent compatibility checkpoint |
-| **Saturation** | When an adequate percentage of an application's clients are running a certain version. The threshold that is considered adequate is defined by the application's requirements. |
+| **Checkpoint N** | `CC-N`; any individual compatibility checkpoint range. `Checkpoint N-1` `CC-(N-1)`, the compatibility checkpoint range before `N`, and so on for `N-2`, `N-3`, etc. |
+| **Saturation** | When an adequate percentage of an application's clients are running a certain version. The specific percentage is defined by the application's requirements (not by Fluid Framework). |
 
 ## Cross-Client Compatibility Policy
 
@@ -41,20 +39,16 @@ The Fluid Framework guarantees cross-client compatibility within an **18-month w
 designated **compatibility checkpoints**. A new Compatibility Checkpoint Release is published on a
 **6-month cadence** and each checkpoint's Range spans until the next Compatibility Checkpoint Release.
 Checkpoints are identified in the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page.
-Any two clients are compatible as long as their checkpoints are within ~18 months of each other
-(spanning Checkpoint N through Checkpoint N-3). Because a Range extends for ~6 months after the
-opening Release, the effective compatibility window for a client toward the end of a Range can be
-up to ~24 months.
+Any two clients are compatible as long as their checkpoints are within ~18 months of each other.
+The window extends in both directions from any checkpoint `N`, spanning Checkpoint `N-3` through
+Checkpoint `N+3`. Because a Range extends for ~6 months after the opening Release, the effective
+compatibility window for a client toward the end of a Range can be up to ~24 months.
 
-> **Notes:**
->
-> - `N` is defined as the latest checkpoint, but the window extends in both
->   directions. Any checkpoint is compatible with the 3 checkpoints before
->   and after it.
-> - This policy is decoupled from major version boundaries. A new Fluid major
->   version (e.g., `3.0`, `4.0`) does not automatically drop cross-client
->   compatibility with prior majors — any cross-client breaking change
->   introduced by a major version must still adhere to the 18-month window.
+> **Note:**
+> This policy is decoupled from major version boundaries. A new Fluid major
+> version (e.g., `3.0`, `4.0`) does not automatically drop cross-client
+> compatibility with prior majors — any cross-client breaking change
+> introduced by a major version must still adhere to the 18-month window.
 
 **Enforcement:** Incompatible clients will be blocked from collaborating on a document and shown a clear error message (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor)).
 
@@ -62,10 +56,10 @@ up to ~24 months.
 
 | Version Combination | Time Between Checkpoints | Compatibility |
 |---------------------|--------------------------|---------------|
-| **Checkpoint N / Checkpoint N-1** | ~6 months | ✅ Compatible |
-| **Checkpoint N / Checkpoint N-2** | ~12 months | ✅ Compatible |
-| **Checkpoint N / Checkpoint N-3** | ~18 months | ✅ Compatible |
-| **Checkpoint N / Checkpoint N-4 or older** | >18 months | ❌ Not supported |
+| **Checkpoint N / Checkpoint N±1** | ~6 months | ✅ Compatible |
+| **Checkpoint N / Checkpoint N±2** | ~12 months | ✅ Compatible |
+| **Checkpoint N / Checkpoint N±3** | ~18 months | ✅ Compatible |
+| **Checkpoint N / Checkpoint N±4 or beyond** | >18 months | ❌ Not supported |
 
 > **Note on non-checkpoint versions:** Customers are not required to run checkpoint
 > releases. A client on a non-checkpoint version inherits the compatibility guarantees
@@ -173,7 +167,7 @@ We recommend following the below pattern to ensure cross-client compatibility. K
    - **Declarative model**: Set `CompatibilityMode` to the value corresponding to that saturated version.
    - **Encapsulated model**: Set `minVersionForCollab` to the specific saturated version (e.g., `"2.10.0"`).
 3. Verify that the configured compatibility checkpoint is within the supported compatibility window of the Fluid version you want to upgrade to. If it is, bump your Fluid dependencies and no further action is required. If not, wait for further saturation and return to step 1.
-4. Monitor telemetry for warnings/errors to ensure safe rollout (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor) below). At this point any clients that are not saturated may be blocked from accessing the document.
+4. Monitor telemetry for warnings/errors to ensure safe rollout (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor) below). At this point any clients running a version older than the configured `minVersionForCollab` may be blocked from accessing the document. <!-- PR #27064 r3140638140 -->
 
 #### Errors and Warnings to Monitor
 

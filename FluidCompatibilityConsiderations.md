@@ -91,7 +91,7 @@ This diagram shows different Fluid layers with different versions in a client:
 
 Cross-client compatibility guarantees that clients within a supported set of versions
 should be able to fully collaborate with each other. For example: Fluid supports
-cross-client compatibility within an 18-month window enforced through designated
+cross-client compatibility within at least an 18-month window enforced through designated
 compatibility checkpoints (see the
 [Cross-Client Compatibility Policy](./CrossClientCompatibility.md#cross-client-compatibility-policy)
 for details). This means that clients running versions of Fluid within this window
