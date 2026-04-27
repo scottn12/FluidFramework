@@ -99,9 +99,7 @@ The following steps describe how to safely stage changes that break cross-client
 
 ### 1. Evaluate if a change breaks the cross-client compatibility policy
 
-Determine whether a change breaks compatibility promises. Specifically, assess whether the data format has changed and whether older clients (within the defined compatibility window) have the necessary code to interpret the new format. If any clients within the collaboration window cannot interpret the new data format, proceed with the following steps.
-
-Additionally, test your changes using the e2e test infrastructure to see if they break cross-client compatibility tests (see [Testing](#testing) below).
+Determine whether a change breaks compatibility promises. Specifically, assess whether the data format has changed and whether older clients (within the defined compatibility window) have the necessary code to interpret the new format. The e2e test infrastructure (see [Testing](#testing) below) will surface many of these breaks automatically; run it as part of your evaluation. If any clients within the collaboration window cannot interpret the new data format, proceed with the following steps.
 
 ### 2. Add a container runtime option to enable/disable the change
 
@@ -174,8 +172,8 @@ CC-4 (`"2.103.0"`), CC-5 (`"2.133.0"`), CC-6 (`"2.163.0"`), CC-7 (`"2.193.0"`), 
   supported and the gate must remain. Some CC-3 clients (i.e. `2.90.0`) cannot understand the data format with `enableFoo` enabled, so the feature must remain gated.
 - **At CC-7** the window shifts to CC-4 through CC-7. The oldest supported
   version (`2.103.0`) is above the `2.100.0` threshold, so every client in the
-  window understands the feature. The gate can be removed in or anytime after
-  the CC-7 release.
+  window understands the feature. The gate can be removed once
+  `lowestMinVersionForCollab` is `>= 2.100.0`. This becomes possible at the at the CC-7 designation.
 
 ### How to remove a feature gate
 
@@ -195,24 +193,29 @@ CC-4 (`"2.103.0"`), CC-5 (`"2.133.0"`), CC-6 (`"2.163.0"`), CC-7 (`"2.193.0"`), 
 
 A new compatibility checkpoint should be designated no less than 6 months after
 the previous checkpoint. When a new compatibility checkpoint is designated, the
-following updates are required to keep the framework's guarantees and enforcement
-in sync with the new supported window:
+following updates should be considered to keep the framework's guarantees and
+enforcement in sync with the new supported window. **Step 1 is required.**
+Steps 2–4 are at our discretion: there is no rule against supporting compatibility
+for longer than 18 months, so we should only bump values in code when we have a
+concrete reason to drop an older checkpoint (e.g., a compat behavior we actually
+want to retire).
 
 1. **Update the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page:**
-   Update the list of supported checkpoints to include details for the new checkpoint.
-2. **Update the declarative model's `CompatibilityMode` mapping:** In
-   [utils.ts](./packages/framework/fluid-static/src/utils.ts), add a
-   `CompatibilityMode` value for the new checkpoint (e.g., `"CC-N"`) mapped to
-   the corresponding `minVersionForCollab`.
-3. **Advance `defaultMinVersionForCollab`:** Update the default in
+   Update the list of supported checkpoints to include details for the new checkpoint. This should also include a changeset noting the new boundary.
+2. **Advance `defaultMinVersionForCollab`:** Update the default in
    [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)
    to the oldest checkpoint still in the supported window.
-4. **Advance `lowestMinVersionForCollab`:** Update the floor in
+3. **Advance `lowestMinVersionForCollab`:** Update the floor in
    [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)
    to match the oldest checkpoint still in the supported window.
    `lowestMinVersionForCollab` is the absolute minimum value a customer can pass
-   as `minVersionForCollab` — values below it cause a `UsageError` at runtime.
-5. **Update the e2e test matrix:** The `FullCompat` version matrix is derived
+   as `minVersionForCollab` — values below it cause a `UsageError` at runtime. This should include a changeset noting the raised minimum
+   supported version. If `lowestMinVersionForCollab` advances across a
+   major version boundary (e.g., `2.x` → `3.x`), also narrow the
+   `MinimumVersionForCollab` type in
+   [compatibilityDefinitions.ts](./packages/runtime/runtime-definitions/src/compatibilityDefinitions.ts)
+   to drop the now-unsupported major from its definition.
+4. **Update the e2e test matrix:** The `FullCompat` version matrix is derived
    from the currently supported checkpoints — update it so tests only run
    against versions within the new window.
 

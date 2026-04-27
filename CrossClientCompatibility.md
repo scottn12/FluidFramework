@@ -82,11 +82,13 @@ If `minVersionForCollab` is not explicitly set, the runtime uses a default deriv
 
 ### What This Means for an Application
 
-As an application developer, you need to manage your Fluid version upgrades carefully to ensure uninterrupted collaboration for your users. By configuring `minVersionForCollab` appropriately and monitoring your client version distribution, you can safely upgrade while maintaining compatibility across your user base.
+As an application developer, you need to manage your Fluid Framework version upgrades carefully to ensure uninterrupted collaboration for your users. It is **highly recommended** to explicitly configure `minVersionForCollab` and monitor your client version distribution. Setting `minVersionForCollab` explicitly surfaces version mismatches at build time. This prevents a release from shipping and silently raising the floor, locking older clients out.
 
 #### Encapsulated vs Declarative Models
 
 The cross-client compatibility policy applies to both application models. Both models use the same underlying enforcement and feature-gating mechanisms. They differ only in how you configure them, which is described in the sections below.
+
+For more information on the differences between these models, see [Application Models](./ApplicationModels.md).
 
 ##### Scope by Layer
 
@@ -122,10 +124,6 @@ Below is the mapping of `CompatibilityMode` values to `minVersionForCollab` at t
 | `"1"` | Supports collaboration with 1.x clients. Uses a conservative set of runtime options. | `"1.0.0"` |
 | `"2"` | Supports collaboration with 2.x clients only. Enables newer features (e.g., runtime ID compressor for SharedTree support). | `"2.0.0"` |
 
-> **Note:** As new compatibility checkpoints are designated, a corresponding
-> `CompatibilityMode` value will be added for each one (e.g., `"CC-4"` for
-> checkpoint CC-4). When a checkpoint ages out of the compatibility window, its
-> mode is deprecated and eventually removed.
 
 #### Configuring Cross-Client Compatibility (Encapsulated Model)
 
@@ -153,10 +151,10 @@ You may also set individual runtime options via `IContainerRuntimeOptions`, but 
 
 If `minVersionForCollab` is not explicitly set, the runtime uses a default derived from the currently supported compatibility checkpoints (see `defaultMinVersionForCollab` in [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)). Passing a value below the supported floor is not permitted and will throw a `UsageError`.
 
-We recommend setting `minVersionForCollab` to the oldest Fluid version your users are
-[saturated](#terminology) on. This will ensure:
+Setting `minVersionForCollab` explicitly is **highly recommended**. Set it to the oldest Fluid Framework
+version your users are [saturated](#terminology) on. This will ensure:
 1. Older and newer clients can collaborate with each other safely.
-2. Your application can leverage new Fluid features as soon as they become safe for cross-client collaboration.
+2. Your application can leverage new Fluid Framework features as soon as they become safe for cross-client collaboration.
 
 #### Best Practices
 
