@@ -27,12 +27,13 @@ This document explains:
 
 ### Terminology
 
-| Term                                 | Definition                                                                                                                                                                                                                |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Compatibility Checkpoint Release** | The first Fluid release in a checkpoint range (e.g., `2.103.0` for CC-4).                                                                                                                                                 |
-| **Compatibility Checkpoint Range**   | The semver range of Fluid releases that are part of a checkpoint (e.g., `>=2.103.0 <2.133.0` for CC-4). All releases in the range share the same cross-client compatibility guarantees as the first release of the range. |
-| **Checkpoint N**                     | `CC-N`; any individual compatibility checkpoint range. `Checkpoint N-1` `CC-(N-1)`, the compatibility checkpoint range before `N`, and so on for `N-2`, `N-3`, etc.                                                       |
-| **Saturation**                       | When an adequate percentage of an application's clients are running a certain version. The specific percentage is defined by the application's requirements (not by Fluid Framework).                                     |
+<!-- prettier-ignore -->
+| Term | Definition |
+| --- | --- |
+| **Compatibility Checkpoint Release** | The first Fluid release in a checkpoint range (e.g., `2.103.0` for CC-4). |
+| **Compatibility Checkpoint Range** | The semver range of Fluid releases that are part of a checkpoint (e.g., `>=2.103.0 <2.133.0` for CC-4). All releases in the range share the same cross-client compatibility guarantees as the first release of the range. |
+| **Checkpoint N** | `CC-N`; any individual compatibility checkpoint range. `Checkpoint N-1` `CC-(N-1)`, the compatibility checkpoint range before `N`, and so on for `N-2`, `N-3`, etc. |
+| **Saturation** | When an adequate percentage of an application's clients are running a certain version. The specific percentage is defined by the application's requirements (not by Fluid Framework). |
 
 ## Cross-Client Compatibility Policy
 
@@ -55,12 +56,13 @@ compatibility window for a client toward the end of a Range can be up to ~24 mon
 
 ### Examples
 
-| Version Combination                         | Time Between Checkpoints | Compatibility    |
-| ------------------------------------------- | ------------------------ | ---------------- |
-| **Checkpoint N / Checkpoint N±1**           | ~6 months                | ✅ Compatible    |
-| **Checkpoint N / Checkpoint N±2**           | ~12 months               | ✅ Compatible    |
-| **Checkpoint N / Checkpoint N±3**           | ~18 months               | ✅ Compatible    |
-| **Checkpoint N / Checkpoint N±4 or beyond** | >18 months               | ❌ Not supported |
+<!-- prettier-ignore -->
+| Version Combination | Time Between Checkpoints | Compatibility |
+| --- | --- | --- |
+| **Checkpoint N / Checkpoint N±1** | ~6 months | ✅ Compatible |
+| **Checkpoint N / Checkpoint N±2** | ~12 months | ✅ Compatible |
+| **Checkpoint N / Checkpoint N±3** | ~18 months | ✅ Compatible |
+| **Checkpoint N / Checkpoint N±4 or beyond** | >18 months | ❌ Not supported |
 
 > **Note on non-checkpoint versions:** Customers are not required to run checkpoint
 > releases. A client on a non-checkpoint version inherits the compatibility guarantees
@@ -120,10 +122,11 @@ The client will map `CompatibilityMode` to a `minVersionForCollab` value (see [u
 
 Below is the mapping of `CompatibilityMode` values to `minVersionForCollab` at the time of writing. For the most up-to-date mapping, please refer to `compatibilityModeToMinVersionForCollab` in [utils.ts](./packages/framework/fluid-static/src/utils.ts).
 
-| Mode  | Meaning                                                                                                                    | Mapped `minVersionForCollab` |
-| ----- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `"1"` | Supports collaboration with 1.x clients. Uses a conservative set of runtime options.                                       | `"1.0.0"`                    |
-| `"2"` | Supports collaboration with 2.x clients only. Enables newer features (e.g., runtime ID compressor for SharedTree support). | `"2.0.0"`                    |
+<!-- prettier-ignore -->
+| Mode | Meaning | Mapped `minVersionForCollab` |
+| --- | --- | --- |
+| `"1"` | Supports collaboration with 1.x clients. Uses a conservative set of runtime options. | `"1.0.0"` |
+| `"2"` | Supports collaboration with 2.x clients only. Enables newer features (e.g., runtime ID compressor for SharedTree support). | `"2.0.0"` |
 
 #### Configuring Cross-Client Compatibility (Encapsulated Model)
 
@@ -166,18 +169,19 @@ We recommend following the below pattern to ensure cross-client compatibility. K
     - **Declarative model**: Set `CompatibilityMode` to the value corresponding to that saturated version.
     - **Encapsulated model**: Set `minVersionForCollab` to the specific saturated version (e.g., `"2.10.0"`).
 3. Verify that the configured compatibility checkpoint is within the supported compatibility window of the Fluid version you want to upgrade to. If it is, bump your Fluid dependencies and no further action is required. If not, wait for further saturation and return to step 1.
-4. Monitor telemetry for warnings/errors to ensure safe rollout (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor) below). At this point any clients running a version older than the configured `minVersionForCollab` may be blocked from accessing the document. <!-- PR #27064 r3140638140 -->
+4. Monitor telemetry for warnings/errors to ensure safe rollout (see [Errors and Warnings to Monitor](#errors-and-warnings-to-monitor) below). At this point any clients running a version older than the configured `minVersionForCollab` may be blocked from accessing the document.
 
 #### Errors and Warnings to Monitor
 
 The following are errors and telemetry warnings you may see during and following an upgrade. Monitoring these signals will help ensure a safe rollout. For more details on telemetry, see [Logging and telemetry](https://fluidframework.com/docs/testing/telemetry) and [Observing Client Version Distribution](./FluidCompatibilityConsiderations.md#observing-client-version-distribution).
 
-| Type                  | Signal                                                       | What it Means                                                                                                                                                        | What to Do                                                                                                                                                                                                                                                                                                                                                                                                                |
-| --------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Telemetry Event       | `MinVersionForCollabWarning`                                 | Clients are joining with a version below your configured minimum, but are still able to understand the document's data format and therefore continue to collaborate. | If you see this warning message, it's likely a sign you updated `minVersionForCollab` too quickly. In future releases, ensure proper [saturation](#terminology) before updating. If these warning messages are ignored, you may risk seeing the below error in the future.                                                                                                                                                |
-| `DataProcessingError` | `Document can't be opened with current version of the code`  | An out-of-window client tried to join and was blocked due to being unable to collaborate with the newer client's document.                                           | If this was unexpected, lower `minVersionForCollab` so newly-created documents will admit older clients. **Note:** documents whose schema has already been elevated by a higher-`minVersionForCollab` writer may continue to block older clients on those specific documents — lowering the configured value does not retroactively undo the elevation in the document's persisted schema. |
-| `UsageError`          | `Incompatible Runtime Option`                                | You manually enabled a feature that requires a higher minimum than your document allows.                                                                             | Turn the feature off or raise `minVersionForCollab` (if there is proper [saturation](#terminology)).                                                                                                                                                                                                                                                                                                                      |
-| `UsageError`          | `Runtime option <name>:<value> requires runtime version <X>` | You manually enabled a feature that requires a higher minimum than your document allows.                                                                             | Turn the feature off or raise `minVersionForCollab` (if there is proper [saturation](#terminology)).                                                                                                                                                                                                                                                                                                                      |
+<!-- prettier-ignore -->
+| Type | Signal | What it Means | What to Do |
+| --- | --- | --- | --- |
+| Telemetry Event | `MinVersionForCollabWarning` | Clients are joining with a version below your configured minimum, but are still able to understand the document's data format and therefore continue to collaborate. | If you see this warning message, it's likely a sign you updated `minVersionForCollab` too quickly. In future releases, ensure proper [saturation](#terminology) before updating. If these warning messages are ignored, you may risk seeing the below error in the future. |
+| `DataProcessingError` | `Document can't be opened with current version of the code` | An out-of-window client tried to join and was blocked due to being unable to collaborate with the newer client's document. | If this was unexpected, lower `minVersionForCollab` so newly-created documents will admit older clients. **Note:** documents whose schema has already been elevated by a higher-`minVersionForCollab` writer may continue to block older clients on those specific documents — lowering the configured value does not retroactively undo the elevation in the document's persisted schema. |
+| `UsageError` | `Incompatible Runtime Option` | You manually enabled a feature that requires a higher minimum than your document allows. | Turn the feature off or raise `minVersionForCollab` (if there is proper [saturation](#terminology)). |
+| `UsageError` | `Runtime option <name>:<value> requires runtime version <X>` | You manually enabled a feature that requires a higher minimum than your document allows. | Turn the feature off or raise `minVersionForCollab` (if there is proper [saturation](#terminology)). |
 
 ## Developer Guide
 
