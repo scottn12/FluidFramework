@@ -10,7 +10,7 @@ Fluid Framework supports two application models for hosting collaborative conten
 
 Publicly supported model. The application uses a service client (e.g., `AzureClient`, `OdspClient`) to create or load containers, and supplies configuration at the service-client level via parameters such as `CompatibilityMode`. The declarative model targets a consistent Fluid Framework version across all layers (Driver, Loader, Runtime, Datastore).
 
-For cross-client compatibility configuration in this model, see [Configuring Cross-Client Compatibility (Declarative Model)](./CrossClientCompatibility.md#configuring-cross-client-compatibility-declarative-model). For layer compatibility considerations, see [Layer Compatibility](./LayerCompatibility.md).
+For cross-client compatibility configuration in this model, see [Configuring Cross-Client Compatibility (Declarative Model)](./CrossClientCompatibility.md#configuring-cross-client-compatibility-declarative-model).
 
 ### Encapsulated Model
 
