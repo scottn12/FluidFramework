@@ -193,35 +193,33 @@ CC-4 (`"2.100.0"`), CC-5 (`"2.130.0"`), CC-6 (`"2.160.0"`), CC-7 (`"2.190.0"`), 
 
 ## Designating a New Compatibility Checkpoint
 
-A new compatibility checkpoint should be designated no less than 6 months after
-the previous checkpoint. It should also be designated on a new major or beta
-boundary (e.g., `3.0.0`, `2.100.0`), so the prior
-checkpoint can extend cleanly to that boundary and support the previous checkpoint.
+Designation is the act of officially marking a Fluid Framework release as a new compatibility checkpoint. It does **not** by itself change runtime enforcement; the related runtime adjustments are described in [Tightening Runtime Enforcement](#tightening-runtime-enforcement) below.
 
-When a new compatibility checkpoint is designated, the
-following updates should be considered to keep the framework's guarantees and
-enforcement in sync with the new supported window. **Step 1 is required.**
-Steps 2–4 are at our discretion: there is no rule against supporting compatibility
-for longer than 18 months, so we should only bump values in code when we have a
-concrete reason to drop an older checkpoint (e.g., a compat behavior we actually
-want to retire).
+A new checkpoint should be designated no less than 6 months after the previous one. It should also land on a new major or beta boundary (e.g., `3.0.0`, `2.100.0`), so the prior checkpoint's range can extend cleanly to the new boundary.
 
-1. **Update the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) page:**
-   Update the list of supported checkpoints to include details for the new checkpoint. This should also include a changeset noting the new boundary.
-2. **Advance `defaultMinVersionForCollab`:** Update the default in
+**To designate a new checkpoint:** update the [Compatibility Checkpoints](./CompatibilityCheckpoints.md) document and include a changeset noting the new boundary so it appears in the release notes.
+
+## Tightening Runtime Enforcement
+
+Once a checkpoint has aged out of the supported window, the runtime's compatibility thresholds can be advanced to drop support for it. There is no rule that we tighten enforcement in with each new checkpoint, and there is no rule against supporting compatibility for longer than 18 months. The cleanest cadence is to advance only when there is a concrete reason (e.g., a compat behavior we actually want to retire). See [Cleaning Up Old Feature Gates](#cleaning-up-old-feature-gates) for more details on retiring compat behaviors.
+
+To tighten runtime enforcement:
+
+1. **Advance `defaultMinVersionForCollab`:** Update the default in
    [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)
    to the oldest checkpoint still in the supported window.
-3. **Advance `lowestMinVersionForCollab`:** Update the floor in
+2. **Advance `lowestMinVersionForCollab`:** Update the floor in
    [compatibilityBase.ts](./packages/runtime/runtime-utils/src/compatibilityBase.ts)
    to match the oldest checkpoint still in the supported window.
-   `lowestMinVersionForCollab` is the absolute minimum value a customer can pass
-   as `minVersionForCollab` — values below it cause a `UsageError` at runtime. This should include a changeset noting the raised minimum
-   supported version. If `lowestMinVersionForCollab` advances across a
-   major version boundary (e.g., `2.x` → `3.x`), also narrow the
-   `MinimumVersionForCollab` type in
+   `lowestMinVersionForCollab` is the absolute minimum value a customer can
+   pass as `minVersionForCollab` — values below it cause a `UsageError` at
+   runtime. Include a changeset noting the raised minimum supported version,
+   since this is a customer-visible breaking change. If
+   `lowestMinVersionForCollab` advances across a major version boundary
+   (e.g., `2.x` → `3.x`), also narrow the `MinimumVersionForCollab` type in
    [compatibilityDefinitions.ts](./packages/runtime/runtime-definitions/src/compatibilityDefinitions.ts)
    to drop the now-unsupported major from its definition.
-4. **Update the e2e test matrix:** The `FullCompat` version matrix is derived
+3. **Update the e2e test matrix:** The `FullCompat` version matrix is derived
    from the currently supported checkpoints — update it so tests only run
    against versions within the new window.
 
