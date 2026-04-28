@@ -5,10 +5,10 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { Flags } from "@oclif/core";
-import * as semver from "semver";
-import chalk from "picocolors";
 import { getResolvedFluidRoot } from "@fluidframework/build-tools";
+import { Flags } from "@oclif/core";
+import chalk from "picocolors";
+import * as semver from "semver";
 import { BaseCommand } from "../library/commands/base.js";
 
 /**
@@ -49,8 +49,7 @@ export default class DesignateCheckpointCommand extends BaseCommand<
 
 	static readonly flags = {
 		name: Flags.string({
-			description:
-				'Checkpoint name (e.g., "CC-2"). Must match the pattern CC-<number>.',
+			description: 'Checkpoint name (e.g., "CC-2"). Must match the pattern CC-<number>.',
 			required: true,
 		}),
 		version: Flags.string({
@@ -95,9 +94,7 @@ export default class DesignateCheckpointCommand extends BaseCommand<
 
 		// Validate date format
 		if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-			this.error(
-				`Invalid date "${date}". Must be in YYYY-MM-DD format.`,
-			);
+			this.error(`Invalid date "${date}". Must be in YYYY-MM-DD format.`);
 		}
 		// Also check the date is actually valid
 		const dateObj = new Date(`${date}T00:00:00Z`);
@@ -174,42 +171,26 @@ export default class DesignateCheckpointCommand extends BaseCommand<
 		this.logHr();
 		this.log(chalk.bold("Manual updates required:"));
 		this.log("");
-		this.log(
-			"The following files need manual updates to register the new checkpoint:\n",
-		);
+		this.log("The following files need manual updates to register the new checkpoint:\n");
 
-		this.log(
-			`  1. ${chalk.cyan("packages/framework/fluid-static/src/types.ts")}`,
-		);
-		this.log(
-			`     Add "${name}" to the CompatibilityMode type union.\n`,
-		);
+		this.log(`  1. ${chalk.cyan("packages/framework/fluid-static/src/types.ts")}`);
+		this.log(`     Add "${name}" to the CompatibilityMode type union.\n`);
 
-		this.log(
-			`  2. ${chalk.cyan("packages/framework/fluid-static/src/utils.ts")}`,
-		);
-		this.log(
-			`     Add a mapping for "${name}" in compatibilityModeToMinVersionForCollab.\n`,
-		);
+		this.log(`  2. ${chalk.cyan("packages/framework/fluid-static/src/utils.ts")}`);
+		this.log(`     Add a mapping for "${name}" in compatibilityModeToMinVersionForCollab.\n`);
 
 		this.log(
 			`  3. ${chalk.cyan("packages/framework/fluid-static/src/compatibilityConfiguration.ts")}`,
 		);
-		this.log(
-			`     Add runtime options for "${name}" in compatibilityModeRuntimeOptions.\n`,
-		);
+		this.log(`     Add runtime options for "${name}" in compatibilityModeRuntimeOptions.\n`);
 
-		this.log(
-			`  4. ${chalk.cyan("packages/test/test-version-utils/src/compatConfig.ts")}`,
-		);
+		this.log(`  4. ${chalk.cyan("packages/test/test-version-utils/src/compatConfig.ts")}`);
 		this.log(`     Register "${name}" in the checkpoint registry.\n`);
 
 		// Check if an old checkpoint aged out (N-3 is the oldest supported)
 		const oldestSupported = newNumber - 3;
 		if (oldestSupported > 1) {
-			this.log(
-				`  5. ${chalk.cyan("packages/framework/fluid-static/src/utils.ts")}`,
-			);
+			this.log(`  5. ${chalk.cyan("packages/framework/fluid-static/src/utils.ts")}`);
 			this.log(
 				`     Check if defaultMinVersionForCollab needs updating now that CC-${oldestSupported - 1} ` +
 					`has aged out of the compatibility window.\n`,
@@ -320,9 +301,7 @@ function insertCheckpointRow(content: string, newRow: string): string {
 	}
 
 	if (lastTableRowIndex === -1) {
-		throw new Error(
-			"Could not find the checkpoint table in CompatibilityCheckpoints.md",
-		);
+		throw new Error("Could not find the checkpoint table in CompatibilityCheckpoints.md");
 	}
 
 	// Insert the new row after the last table row
