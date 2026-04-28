@@ -27,16 +27,12 @@ import type { ITree } from "@fluidframework/tree";
  *
  * - `"1"` — Supports collaboration with 1.x clients. Uses a conservative set of runtime options.
  *
- * - `"2"` — Supports collaboration with 2.x clients only. Enables newer features
- *   (e.g., runtime ID compressor for SharedTree support).
+ * - `"2"` — Supports collaboration with 2.x clients only. Enables newer features (e.g., runtime ID compressor for SharedTree support).
  *
- * - `"CC-1"` — Supports collaboration with clients at Compatibility Checkpoint CC-1
- *   (release 2.100.0) or newer. Enables all features available at that checkpoint.
+ * - `"CC-1"` — Supports collaboration with clients at Compatibility Checkpoint CC-1 (release 2.100.0) or newer. Enables all features available at that checkpoint.
  *
  * Checkpoint modes correspond to the compatibility checkpoints documented in
  * {@link https://github.com/microsoft/FluidFramework/blob/main/CompatibilityCheckpoints.md | CompatibilityCheckpoints.md}.
- *
- * @deprecated Modes `"1"` and `"2"` are deprecated. Use checkpoint modes (e.g., `"CC-1"`) instead.
  *
  * @public
  */
