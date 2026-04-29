@@ -22,6 +22,7 @@ import type {
 import type {
 	ContainerSchema,
 	IFluidContainer,
+	// eslint-disable-next-line import-x/no-deprecated
 	CompatibilityMode,
 } from "@fluidframework/fluid-static";
 import {
@@ -30,6 +31,7 @@ import {
 	createServiceAudience,
 } from "@fluidframework/fluid-static/internal";
 import { RouterliciousDocumentServiceFactory } from "@fluidframework/routerlicious-driver/internal";
+import type { MinimumVersionForCollab } from "@fluidframework/runtime-definitions/internal";
 import { wrapConfigProviderWithDefaults } from "@fluidframework/telemetry-utils/internal";
 import {
 	InsecureTinyliciousTokenProvider,
@@ -72,17 +74,39 @@ export class TinyliciousClient {
 	/**
 	 * Creates a new detached container instance in Tinylicious server.
 	 * @param containerSchema - Container schema for the new container.
-	 * @param compatibilityMode - Compatibility mode the container should run in.
+	 * @param minVersionForCollab - Minimum Fluid Framework version required for collaboration on the document.
 	 * @returns New detached container instance along with associated services.
+	 *
+	 * @beta
+	 */
+	// eslint-disable-next-line @fluid-internal/fluid/no-member-release-tags
+	public async createContainer<TContainerSchema extends ContainerSchema>(
+		containerSchema: TContainerSchema,
+		minVersionForCollab: MinimumVersionForCollab,
+	): Promise<{
+		container: IFluidContainer<TContainerSchema>;
+		services: TinyliciousContainerServices;
+	}>;
+	/**
+	 * @deprecated Pass a `MinimumVersionForCollab` semver string (e.g. `"2.0.0"`) instead.
 	 */
 	public async createContainer<TContainerSchema extends ContainerSchema>(
 		containerSchema: TContainerSchema,
+		// eslint-disable-next-line import-x/no-deprecated
 		compatibilityMode: CompatibilityMode,
 	): Promise<{
 		container: IFluidContainer<TContainerSchema>;
 		services: TinyliciousContainerServices;
+	}>;
+	public async createContainer<TContainerSchema extends ContainerSchema>(
+		containerSchema: TContainerSchema,
+		// eslint-disable-next-line import-x/no-deprecated
+		compatConfig: CompatibilityMode | MinimumVersionForCollab,
+	): Promise<{
+		container: IFluidContainer<TContainerSchema>;
+		services: TinyliciousContainerServices;
 	}> {
-		const loaderProps = this.getLoaderProps(containerSchema, compatibilityMode);
+		const loaderProps = this.getLoaderProps(containerSchema, compatConfig);
 
 		// We're not actually using the code proposal (our code loader always loads the same module
 		// regardless of the proposal), but the Container will only give us a NullRuntime if there's
@@ -123,18 +147,42 @@ export class TinyliciousClient {
 	 * Accesses the existing container given its unique ID in the tinylicious server.
 	 * @param id - Unique ID of the container.
 	 * @param containerSchema - Container schema used to access data objects in the container.
-	 * @param compatibilityMode - Compatibility mode the container should run in.
+	 * @param minVersionForCollab - Minimum Fluid Framework version required for collaboration on the document.
 	 * @returns Existing container instance along with associated services.
+	 *
+	 * @beta
+	 */
+	// eslint-disable-next-line @fluid-internal/fluid/no-member-release-tags
+	public async getContainer<TContainerSchema extends ContainerSchema>(
+		id: string,
+		containerSchema: TContainerSchema,
+		minVersionForCollab: MinimumVersionForCollab,
+	): Promise<{
+		container: IFluidContainer<TContainerSchema>;
+		services: TinyliciousContainerServices;
+	}>;
+	/**
+	 * @deprecated Pass a `MinimumVersionForCollab` semver string (e.g. `"2.0.0"`) instead.
 	 */
 	public async getContainer<TContainerSchema extends ContainerSchema>(
 		id: string,
 		containerSchema: TContainerSchema,
+		// eslint-disable-next-line import-x/no-deprecated
 		compatibilityMode: CompatibilityMode,
 	): Promise<{
 		container: IFluidContainer<TContainerSchema>;
 		services: TinyliciousContainerServices;
+	}>;
+	public async getContainer<TContainerSchema extends ContainerSchema>(
+		id: string,
+		containerSchema: TContainerSchema,
+		// eslint-disable-next-line import-x/no-deprecated
+		compatConfig: CompatibilityMode | MinimumVersionForCollab,
+	): Promise<{
+		container: IFluidContainer<TContainerSchema>;
+		services: TinyliciousContainerServices;
 	}> {
-		const loaderProps = this.getLoaderProps(containerSchema, compatibilityMode);
+		const loaderProps = this.getLoaderProps(containerSchema, compatConfig);
 		const container = await loadExistingContainer({ ...loaderProps, request: { url: id } });
 		const fluidContainer = await createFluidContainer<TContainerSchema>({
 			container,
@@ -155,12 +203,20 @@ export class TinyliciousClient {
 
 	private getLoaderProps(
 		schema: ContainerSchema,
-		compatibilityMode: CompatibilityMode,
+		// eslint-disable-next-line import-x/no-deprecated
+		compatConfig: CompatibilityMode | MinimumVersionForCollab,
 	): ILoaderProps {
-		const containerRuntimeFactory = createDOProviderContainerRuntimeFactory({
-			schema,
-			compatibilityMode,
-		});
+		// MinimumVersionForCollab strings always contain a "."; CompatibilityMode values ("1", "2") do not.
+		const containerRuntimeFactory = compatConfig.includes(".")
+			? createDOProviderContainerRuntimeFactory({
+					schema,
+					minVersionForCollab: compatConfig as MinimumVersionForCollab,
+				})
+			: createDOProviderContainerRuntimeFactory({
+					schema,
+					// eslint-disable-next-line import-x/no-deprecated
+					compatibilityMode: compatConfig as CompatibilityMode,
+				});
 		const load = async (): Promise<IFluidModuleWithDetails> => {
 			return {
 				module: { fluidExport: containerRuntimeFactory },

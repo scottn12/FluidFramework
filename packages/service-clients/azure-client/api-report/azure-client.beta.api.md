@@ -7,15 +7,32 @@
 // @public
 export class AzureClient {
     constructor(properties: AzureClientProps);
+    // @beta
+    createContainer<const TContainerSchema extends ContainerSchema>(containerSchema: TContainerSchema, minVersionForCollab: MinimumVersionForCollab): Promise<{
+        container: IFluidContainer<TContainerSchema>;
+        services: AzureContainerServices;
+    }>;
+    // @deprecated (undocumented)
     createContainer<const TContainerSchema extends ContainerSchema>(containerSchema: TContainerSchema, compatibilityMode: CompatibilityMode): Promise<{
         container: IFluidContainer<TContainerSchema>;
         services: AzureContainerServices;
     }>;
+    // @beta
+    getContainer<TContainerSchema extends ContainerSchema>(id: string, containerSchema: TContainerSchema, minVersionForCollab: MinimumVersionForCollab): Promise<{
+        container: IFluidContainer<TContainerSchema>;
+        services: AzureContainerServices;
+    }>;
+    // @deprecated (undocumented)
     getContainer<TContainerSchema extends ContainerSchema>(id: string, containerSchema: TContainerSchema, compatibilityMode: CompatibilityMode): Promise<{
         container: IFluidContainer<TContainerSchema>;
         services: AzureContainerServices;
     }>;
     getContainerVersions(id: string, options?: AzureGetVersionsOptions): Promise<AzureContainerVersion[]>;
+    // @beta
+    viewContainerVersion<TContainerSchema extends ContainerSchema>(id: string, containerSchema: TContainerSchema, version: AzureContainerVersion, minVersionForCollab: MinimumVersionForCollab): Promise<{
+        container: IFluidContainer<TContainerSchema>;
+    }>;
+    // @deprecated (undocumented)
     viewContainerVersion<TContainerSchema extends ContainerSchema>(id: string, containerSchema: TContainerSchema, version: AzureContainerVersion, compatibilityMode: CompatibilityMode): Promise<{
         container: IFluidContainer<TContainerSchema>;
     }>;
@@ -73,7 +90,7 @@ export interface AzureRemoteConnectionConfig extends AzureConnectionConfig {
     type: "remote";
 }
 
-// @public
+// @public @deprecated
 export type CompatibilityMode = "1" | "2";
 
 // @public
