@@ -152,6 +152,7 @@ export function makeFluidObject<
 export const compatibilityModeToMinVersionForCollab = {
 	"1": "1.0.0",
 	"2": "2.0.0",
+	"CC-1": "2.100.0",
 } as const satisfies Record<CompatibilityMode, MinimumVersionForCollab>;
 
 /**

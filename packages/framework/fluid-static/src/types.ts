@@ -19,12 +19,24 @@ import type { ITree } from "@fluidframework/tree";
 
 /**
  * Determines the set of runtime options that Fluid Framework will use when running.
- * In "1" mode we support full interop between 2.x clients and 1.x clients,
- * while in "2" mode we only support interop between 2.x clients.
+ *
+ * @remarks
+ *
+ * Modes `"1"` and `"2"` are legacy values retained for backward compatibility.
+ * New integrations should use checkpoint-based modes such as `"CC-1"`.
+ *
+ * - `"1"` — Supports collaboration with 1.x clients. Uses a conservative set of runtime options.
+ *
+ * - `"2"` — Supports collaboration with 2.x clients only. Enables newer features (e.g., runtime ID compressor for SharedTree support).
+ *
+ * - `"CC-1"` — Supports collaboration with clients at Compatibility Checkpoint CC-1 (release 2.100.0) or newer. Enables all features available at that checkpoint.
+ *
+ * Checkpoint modes correspond to the compatibility checkpoints documented in
+ * {@link https://github.com/microsoft/FluidFramework/blob/main/CompatibilityCheckpoints.md | CompatibilityCheckpoints.md}.
  *
  * @public
  */
-export type CompatibilityMode = "1" | "2";
+export type CompatibilityMode = "1" | "2" | "CC-1";
 
 /**
  * A mapping of string identifiers to instantiated `DataObject`s or `SharedObject`s.
