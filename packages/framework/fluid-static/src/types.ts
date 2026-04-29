@@ -22,6 +22,11 @@ import type { ITree } from "@fluidframework/tree";
  * In "1" mode we support full interop between 2.x clients and 1.x clients,
  * while in "2" mode we only support interop between 2.x clients.
  *
+ * @deprecated Pass a `MinimumVersionForCollab` semver string (e.g. `"2.0.0"`) instead.
+ * This brings the declarative model in line with the encapsulated model, which already
+ * configures cross-client compatibility via `minVersionForCollab`. The legacy mode `"1"`
+ * corresponds to `minVersionForCollab: "1.0.0"`; mode `"2"` corresponds to `"2.0.0"`.
+ *
  * @public
  */
 export type CompatibilityMode = "1" | "2";

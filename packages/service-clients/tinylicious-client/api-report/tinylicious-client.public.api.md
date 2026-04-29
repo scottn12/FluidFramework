@@ -12,10 +12,12 @@ export type ITinyliciousAudience = IServiceAudience<TinyliciousMember>;
 // @public @sealed
 export class TinyliciousClient {
     constructor(properties?: TinyliciousClientProps);
+    // @deprecated (undocumented)
     createContainer<TContainerSchema extends ContainerSchema>(containerSchema: TContainerSchema, compatibilityMode: CompatibilityMode): Promise<{
         container: IFluidContainer<TContainerSchema>;
         services: TinyliciousContainerServices;
     }>;
+    // @deprecated (undocumented)
     getContainer<TContainerSchema extends ContainerSchema>(id: string, containerSchema: TContainerSchema, compatibilityMode: CompatibilityMode): Promise<{
         container: IFluidContainer<TContainerSchema>;
         services: TinyliciousContainerServices;

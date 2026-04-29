@@ -4,7 +4,7 @@
 
 ```ts
 
-// @public
+// @public @deprecated
 export type CompatibilityMode = "1" | "2";
 
 // @public
@@ -19,7 +19,8 @@ export interface ContainerSchema {
 // @beta @legacy
 export function createTreeContainerRuntimeFactory(props: {
     readonly schema: TreeContainerSchema;
-    readonly compatibilityMode: CompatibilityMode;
+    readonly compatibilityMode?: CompatibilityMode;
+    readonly minVersionForCollab?: MinimumVersionForCollab;
     readonly rootDataStoreRegistry?: IFluidDataStoreRegistry;
     readonly runtimeOptionOverrides?: Partial<IContainerRuntimeOptions>;
     readonly minVersionForCollabOverride?: MinimumVersionForCollab;

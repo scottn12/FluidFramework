@@ -4,6 +4,7 @@
  */
 
 import type { DataObjectKind } from "@fluidframework/aqueduct/internal";
+import type { IContainerRuntimeOptions } from "@fluidframework/container-runtime/internal";
 import type { FluidObjectKeys, IFluidLoadable } from "@fluidframework/core-interfaces";
 import { oob } from "@fluidframework/core-utils/internal";
 import type {
@@ -19,7 +20,9 @@ import type { ISharedObjectKind } from "@fluidframework/shared-object-base/inter
 import { UsageError } from "@fluidframework/telemetry-utils/internal";
 import { SharedTreeFactoryType } from "@fluidframework/tree/internal";
 
+import { compatibilityModeRuntimeOptions } from "./compatibilityConfiguration.js";
 import type {
+	// eslint-disable-next-line import-x/no-deprecated
 	CompatibilityMode,
 	ContainerSchema,
 	LoadableObjectKind,
@@ -152,7 +155,54 @@ export function makeFluidObject<
 export const compatibilityModeToMinVersionForCollab = {
 	"1": "1.0.0",
 	"2": "2.0.0",
+	// eslint-disable-next-line import-x/no-deprecated
 } as const satisfies Record<CompatibilityMode, MinimumVersionForCollab>;
+
+/**
+ * Resolves the {@link MinimumVersionForCollab} and base runtime options to use for a
+ * declarative-model container, given either a (deprecated) `compatibilityMode` or a
+ * direct `minVersionForCollab`. Exactly one of the two must be provided.
+ *
+ * When `minVersionForCollab` is provided, runtime options are derived from its major
+ * version: `1.x` → mode "1" defaults; otherwise → mode "2" defaults. This mirrors the
+ * mapping the legacy `compatibilityMode` switch performed.
+ *
+ * @internal
+ */
+export function resolveMinVersionAndRuntimeOptions(input: {
+	// eslint-disable-next-line import-x/no-deprecated
+	compatibilityMode?: CompatibilityMode;
+	minVersionForCollab?: MinimumVersionForCollab;
+}): {
+	minVersionForCollab: MinimumVersionForCollab;
+	runtimeOptions: IContainerRuntimeOptions;
+} {
+	const { compatibilityMode, minVersionForCollab } = input;
+	if (compatibilityMode !== undefined && minVersionForCollab !== undefined) {
+		throw new UsageError(
+			"Specify exactly one of compatibilityMode or minVersionForCollab, not both.",
+		);
+	}
+	if (compatibilityMode !== undefined) {
+		return {
+			minVersionForCollab: compatibilityModeToMinVersionForCollab[compatibilityMode],
+			runtimeOptions: compatibilityModeRuntimeOptions[compatibilityMode],
+		};
+	}
+	if (minVersionForCollab !== undefined) {
+		// MinimumVersionForCollab is constrained to `${1 | 2}.${bigint}.${bigint}` (with optional
+		// prerelease tail) by its template-literal type, so a `startsWith("1.")` check is sufficient
+		// to distinguish 1.x from 2.x without parsing semver.
+		const isLegacyMajor = minVersionForCollab.startsWith("1.");
+		return {
+			minVersionForCollab,
+			runtimeOptions: isLegacyMajor
+				? compatibilityModeRuntimeOptions["1"]
+				: compatibilityModeRuntimeOptions["2"],
+		};
+	}
+	throw new UsageError("Must specify either compatibilityMode or minVersionForCollab.");
+}
 
 /**
  * Determines if the provided schema is a valid tree-based container schema.
