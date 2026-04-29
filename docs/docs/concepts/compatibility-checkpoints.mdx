@@ -1,0 +1,47 @@
+---
+title: Compatibility Checkpoints
+sidebar_position: 5
+description: Designated checkpoint releases that define the Fluid Framework cross-client compatibility window.
+---
+
+# Compatibility Checkpoints
+
+Compatibility checkpoints are designated Fluid Framework releases that mark cross-client compatibility boundaries. They define which versions of Fluid can safely collaborate on the same document.
+
+## Schedule
+
+Checkpoints are designated on a cadence of **no less than 6 months**. Any two clients
+whose checkpoint releases are within **18 months** of each other (spanning Checkpoint N
+through Checkpoint N-3) are guaranteed to be cross-client compatible.
+
+## Checkpoints
+
+| Checkpoint | Version Range                                    | Earliest Date | Compatible Checkpoints                    |
+| ---------- | ------------------------------------------------ | ------------- | ----------------------------------------- |
+| CC-1       | `>=1.4.0 <2.0.0 \| 2.0.0-internal* \| 2.0.0-rc*` | 2024-04-09    | CC-1, CC-2, CC-3, CC-4                    |
+| CC-2       | `>=2.0.0 <2.60.0`                                | 2024-06-26    | CC-1, CC-2, CC-3, CC-4, CC-5              |
+| CC-3       | `>=2.60.0 <2.100.0`                              | 2025-09-02    | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6        |
+| CC-4       | `>=2.100.0 <2.140.0` (limit TBD)                 | ~2026-04-27   | CC-1, CC-2, CC-3, CC-4, CC-5, CC-6, CC-7  |
+| CC-5 (TBD) | `>=2.140.0 <2.180.0`                             | ~2026-12-07   | CC-2, CC-3, CC-4, CC-5, CC-6, CC-7, CC-8  |
+| CC-6 (TBD) | `>=2.180.0 <2.220.0`                             | ~2027-07-19   | CC-3, CC-4, CC-5, CC-6, CC-7, CC-8, CC-9  |
+| CC-7 (TBD) | `>=2.220.0 <2.260.0`                             | ~2028-02-28   | CC-4, CC-5, CC-6, CC-7, CC-8, CC-9, CC-10 |
+
+> **Notes:**
+>
+> 1. `CC-1`, `CC-2`, and `CC-3` were designated retroactively based on existing
+>    Fluid Framework releases, which is why the cadence between them is
+>    irregular. Starting with `CC-4`, checkpoints follow the standard cadence.
+> 2. Dates and version ranges for future checkpoints are estimates and are
+>    subject to change. Exact release versions and dates will be added as each
+>    checkpoint is designated.
+
+## Learn More
+
+-   [Cross-Client Compatibility Policy](https://github.com/microsoft/FluidFramework/blob/main/CrossClientCompatibility.md) — Full policy documentation
+-   [Compatibility Checkpoints (source)](https://github.com/microsoft/FluidFramework/blob/main/CompatibilityCheckpoints.md) — Authoritative checkpoint list maintained in the repository
+
+:::note
+The authoritative list of compatibility checkpoints is maintained in the repository root at
+[`CompatibilityCheckpoints.md`](https://github.com/microsoft/FluidFramework/blob/main/CompatibilityCheckpoints.md).
+This page may lag behind the source; always check the repository for the latest information.
+:::

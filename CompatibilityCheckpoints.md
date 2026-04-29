@@ -41,3 +41,7 @@ checkpoints are designated.
 > 2. Dates and version ranges for future checkpoints are estimates and are
 >    subject to change. Exact release versions and dates will be added as each
 >    checkpoint is designated.
+
+---
+
+> This information is also available on the [Fluid Framework website](https://fluidframework.com/docs/concepts/compatibility-checkpoints).
